@@ -18,8 +18,6 @@
   --color-accent-hi: var(--accent-hi);
   --color-accent-soft: var(--accent-soft);
   --color-hero: var(--hero);
-  --color-rail: var(--rail);
-  --color-rail-ink: var(--rail-ink);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -44,8 +42,6 @@
   --accent-hi: #6b95ff;
   --accent-soft: rgb(47 107 255 / 0.15);
   --hero: #06143a;
-  --rail: #000000;
-  --rail-ink: #8793b4;
   --success: #22c38e;
   --warning: #f5a524;
   --danger: #ff4d6a;
@@ -67,8 +63,6 @@
   --accent-hi: #1f5bff;
   --accent-soft: #e5edff;
   --hero: #071a4d;
-  --rail: #050912;
-  --rail-ink: #8a95b6;
   --success: #0f9f6e;
   --warning: #c98000;
   --danger: #e2334d;
@@ -185,9 +179,43 @@
   transform-box: fill-box;
 }
 
+/* Trang giới thiệu: dải chữ chạy ngang và bong bóng nổi lên trong nước */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 38s linear infinite;
+}
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(var(--rise, -420px)) scale(1);
+    opacity: 0;
+  }
+}
+.bubble {
+  animation: bubble-rise var(--dur, 6s) ease-in var(--delay, 0s) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wave-drift,
-  .wave-drift-slow {
+  .wave-drift-slow,
+  .marquee,
+  .bubble {
     animation: none;
+  }
+  .bubble {
+    opacity: 0;
   }
 }

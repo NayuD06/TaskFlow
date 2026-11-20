@@ -42,8 +42,8 @@ export default function Shell() {
   }, [openPalette, newTask, setFolded, sheet, paletteOpen]);
 
   return (
-    <div className="min-h-dvh p-2.5 sm:p-3.5 lg:flex lg:items-start lg:gap-3.5">
-      <div className="hidden lg:block">
+    <div className="min-h-dvh p-2.5 sm:p-3.5 lg:flex lg:items-start lg:gap-5">
+      <div className="sticky top-3.5 z-20 hidden self-start lg:block">
         <Sidebar folded={folded} onToggleFold={() => setFolded((v) => !v)} />
       </div>
 

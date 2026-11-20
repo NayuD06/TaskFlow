@@ -1,5 +1,6 @@
 import { CalendarDays, Check, KanbanSquare, Moon, Sun, TrendingUp } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
+import { Link } from 'react-router';
 import { useTheme } from '../../lib/theme.js';
 import { LogoMark, LogoWord } from '../shell/Logo.jsx';
 
@@ -30,10 +31,10 @@ function Float({ children, delay = 0, className = '' }) {
 function Showcase() {
   return (
     <div className="relative hidden overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_0%_0%,#123a9c_0%,#06143a_55%,#040b22_100%)] p-10 text-white lg:flex lg:flex-col">
-      <div className="flex items-center gap-2.5">
+      <Link to="/" className="flex w-fit items-center gap-2.5" aria-label="TaskFlow, về trang chủ">
         <LogoMark size={36} />
         <LogoWord />
-      </div>
+      </Link>
 
       <div className="relative z-10 mt-14 max-w-md">
         <h2 className="font-display text-[34px] leading-[1.15] font-bold tracking-tight">Mỗi việc xong, mực nước lại dâng.</h2>
@@ -122,10 +123,10 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
       <Showcase />
       <main className="relative flex flex-col px-3 py-4 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 lg:invisible">
+          <Link to="/" className="flex items-center gap-2 lg:invisible" aria-label="TaskFlow, về trang chủ">
             <LogoMark size={30} />
             <span className="font-display text-[16px] font-bold tracking-tight">TaskFlow</span>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={toggle}

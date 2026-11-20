@@ -321,7 +321,7 @@ Lúc này mở web lên sẽ thấy báo **không kết nối được API**. Đ
 
 Mở địa chỉ web ở bước 4:
 
-- [ ] Chưa đăng nhập thì tự chuyển sang trang **Đăng nhập**.
+- [ ] Chưa đăng nhập thì thấy **trang giới thiệu** (có nút Bắt đầu miễn phí, Đăng nhập, Dùng thử bản demo). Bấm F5 ở bất kỳ trang nào cũng không bị lỗi 404.
 - [ ] Đăng nhập bằng `demo@taskflow.dev` / `Demo@123456`: trang **Tổng quan** hiện lời chào kèm tên, quả cầu nước, số liệu và biểu đồ.
 - [ ] Vào **Dự án** thấy 5 dự án mẫu, mở một dự án thấy bảng Kanban.
 - [ ] Kéo một thẻ sang cột khác, tải lại trang (F5) thẻ vẫn ở chỗ mới.

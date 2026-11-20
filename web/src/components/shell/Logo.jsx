@@ -33,9 +33,10 @@ export function LogoMark({ size = 32 }) {
   );
 }
 
-export function LogoWord({ className = '' }) {
+/** Chữ TaskFlow. Mặc định màu trắng (trên nền tối), truyền className để đổi màu. */
+export function LogoWord({ className = 'text-white' }) {
   return (
-    <span className={`flex font-display text-[17px] font-bold tracking-tight text-white ${className}`} aria-hidden="true">
+    <span className={`flex font-display text-[17px] font-bold tracking-tight ${className}`} aria-hidden="true">
       {'TaskFlow'.split('').map((ch, i) => (
         <motion.span
           key={i}

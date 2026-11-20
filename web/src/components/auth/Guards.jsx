@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
 import { API_URL } from '../../lib/api.js';
+import Landing from '../../pages/Landing.jsx';
 import { LogoMark } from '../shell/Logo.jsx';
 import { useAuth } from './AuthContext.jsx';
 
@@ -69,9 +70,11 @@ export function RequireAuth({ children }) {
   if (status === 'loading') return <Splash />;
   if (status === 'offline') return <Offline />;
   if (status !== 'authed') {
+    // Khách mở trang chủ thì thấy trang giới thiệu, tự đăng xuất thì cũng quay về đó
+    if (location.pathname === '/') return <Landing />;
+    if (reason === 'logout') return <Navigate to="/" replace />;
     const next = location.pathname + location.search;
-    const plain = next === '/' || reason === 'logout';
-    return <Navigate to={plain ? '/login' : `/login?next=${encodeURIComponent(next)}`} replace />;
+    return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;
   }
   return children;
 }

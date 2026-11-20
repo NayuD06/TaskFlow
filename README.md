@@ -11,6 +11,11 @@ Mỗi người tự đăng ký tài khoản và chỉ thấy dữ liệu của c
 
 ## Tính năng
 
+**Trang giới thiệu**
+- Khách chưa đăng nhập mở trang chủ sẽ thấy trang giới thiệu: bảng Kanban thu nhỏ tự chạy, danh sách tính năng, 3 bước dùng với bể nước dâng theo thanh cuộn, câu hỏi thường gặp
+- Nút Tạo tài khoản, Đăng nhập và Dùng thử bản demo. Người đã đăng nhập vào thẳng trang Tổng quan
+- Tự "đánh thức" máy chủ Render ngay khi mở trang để lúc bấm đăng nhập không phải chờ lâu
+
 **Tài khoản**
 - Đăng ký, đăng nhập, đăng xuất. Người mới đăng ký được tạo sẵn 1 dự án hướng dẫn
 - Trang **Tài khoản**: đổi tên, chọn màu avatar, đổi mật khẩu, đăng xuất mọi thiết bị, xoá tài khoản (xoá luôn toàn bộ dữ liệu)
@@ -87,13 +92,14 @@ todo-list/
 │   │   ├── components/
 │   │   │   ├── auth/         # AuthContext, chặn route, ô nhập, khung trang đăng nhập
 │   │   │   ├── dashboard/    # thẻ chào, số liệu, biểu đồ, hoạt động
+│   │   │   ├── landing/      # bảng Kanban minh hoạ, bể nước theo thanh cuộn
 │   │   │   ├── project/      # Kanban, danh sách, lịch, hộp thoại dự án
 │   │   │   ├── shell/        # thanh bên, thanh trên, Ctrl K
 │   │   │   ├── task/         # bảng chi tiết, checklist, dòng việc
 │   │   │   └── ui/           # nút, hộp thoại, biểu đồ, toast...
 │   │   ├── hooks/            # gọi API bằng TanStack Query, cập nhật lạc quan
 │   │   ├── lib/              # api client, ngày giờ, hằng số, theme
-│   │   └── pages/            # Đăng nhập, Đăng ký, Tổng quan, Dự án, Trang dự án, Việc của tôi, Tài khoản
+│   │   └── pages/            # Giới thiệu, Đăng nhập, Đăng ký, Tổng quan, Dự án, Trang dự án, Việc của tôi, Tài khoản
 │   ├── vercel.json
 │   └── .env.example
 ├── render.yaml               # Blueprint deploy API lên Render
