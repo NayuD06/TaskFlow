@@ -1,9 +1,10 @@
-import { CircleCheckBig, CornerDownLeft, FolderKanban, LayoutDashboard, Plus, Search } from 'lucide-react';
+import { CircleCheckBig, CornerDownLeft, FolderKanban, LayoutDashboard, LogOut, Plus, Search, UserRound } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useProjects, useTasks } from '../../hooks/queries.js';
 import { hueStyle } from '../../lib/constants.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 import { DueChip } from '../ui/Pills.jsx';
 import { useUI } from './UIContext.jsx';
 
@@ -26,6 +27,7 @@ function Highlight({ text, query }) {
 export default function CommandPalette() {
   const { paletteOpen, closePalette, openTask, newTask, newProject } = useUI();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef(null);
@@ -52,6 +54,7 @@ export default function CommandPalette() {
             { id: 'g-home', icon: LayoutDashboard, title: 'Tổng quan', run: go('/') },
             { id: 'g-projects', icon: FolderKanban, title: 'Dự án', run: go('/projects') },
             { id: 'g-mine', icon: CircleCheckBig, title: 'Việc của tôi', run: go('/my-tasks') },
+            { id: 'g-settings', icon: UserRound, title: 'Cài đặt tài khoản', run: go('/settings') },
           ],
         },
         {
@@ -65,6 +68,7 @@ export default function CommandPalette() {
           label: 'Dự án',
           items: projects.slice(0, 5).map((p) => ({ id: p._id, project: p, title: p.name, run: go(`/projects/${p._id}`) })),
         },
+        { label: 'Tài khoản', items: [{ id: 'a-logout', icon: LogOut, title: 'Đăng xuất', run: logout }] },
       ];
     }
     const fq = fold(q);
@@ -88,7 +92,7 @@ export default function CommandPalette() {
       { label: 'Công việc', items: matchedTasks },
       { label: 'Dự án', items: matchedProjects },
     ].filter((g) => g.items.length);
-  }, [query, tasks, projects, navigate, newTask, newProject, openTask]);
+  }, [query, tasks, projects, navigate, newTask, newProject, openTask, logout]);
 
   const flat = groups.flatMap((g) => g.items);
 

@@ -1,7 +1,10 @@
-import { CircleCheckBig, FolderKanban, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
+import { CircleCheckBig, FolderKanban, LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { NavLink, useLocation } from 'react-router';
 import { useDashboard, useProjects } from '../../hooks/queries.js';
+import { useAuth } from '../auth/AuthContext.jsx';
+import { Avatar } from '../auth/Fields.jsx';
+import { useToast } from '../ui/Toasts.jsx';
 import { hueStyle } from '../../lib/constants.js';
 import { LogoMark, LogoWord } from './Logo.jsx';
 import { useUI } from './UIContext.jsx';
@@ -48,6 +51,48 @@ function NavItem({ to, icon: Icon, label, count, folded, end, onNavigate }) {
         </>
       )}
     </NavLink>
+  );
+}
+
+function UserCard({ folded, onNavigate }) {
+  const { user, logout } = useAuth();
+  const notify = useToast();
+  if (!user) return null;
+  return (
+    <div className={`mt-3 flex items-center gap-1 rounded-2xl bg-white/[0.04] p-1.5 ring-1 ring-white/[0.06] ${folded ? 'justify-center' : ''}`}>
+      <NavLink
+        to="/settings"
+        onClick={onNavigate}
+        title={folded ? `${user.name} · Cài đặt tài khoản` : 'Cài đặt tài khoản'}
+        className={({ isActive }) =>
+          `flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-white/[0.06] ${isActive ? 'bg-white/[0.08]' : ''} ${folded ? 'flex-none' : ''}`
+        }
+      >
+        <Avatar user={user} size={32} />
+        <AnimatePresence initial={false}>
+          {!folded && (
+            <motion.span {...fade} className="min-w-0 leading-tight">
+              <span className="block truncate text-[13px] font-semibold text-white">{user.name}</span>
+              <span className="block truncate text-[11px] text-rail-ink/80">{user.isDemo ? 'Tài khoản demo' : user.email}</span>
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </NavLink>
+      {!folded && (
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            notify({ message: 'Đã đăng xuất' });
+          }}
+          className="grid size-9 shrink-0 place-items-center rounded-xl text-rail-ink hover:bg-white/[0.08] hover:text-white"
+          aria-label="Đăng xuất"
+          title="Đăng xuất"
+        >
+          <LogOut className="size-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -139,11 +184,13 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
         </button>
       </div>
 
+      <UserCard folded={folded} onNavigate={onNavigate} />
+
       {!mobile && (
         <button
           type="button"
           onClick={onToggleFold}
-          className="mt-3 flex h-10 items-center gap-3 rounded-xl px-[11px] text-[13px] font-medium text-rail-ink hover:bg-white/[0.06] hover:text-white"
+          className="mt-1.5 flex h-10 items-center gap-3 rounded-xl px-[11px] text-[13px] font-medium text-rail-ink hover:bg-white/[0.06] hover:text-white"
           title="Thu gọn / mở rộng (Ctrl + B)"
           aria-label={folded ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
         >

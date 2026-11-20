@@ -8,6 +8,35 @@ export class ApiError extends Error {
   }
 }
 
+// ---------- Token đăng nhập ----------
+// Lưu JWT trong localStorage và gửi qua header Authorization. Web (Vercel) và API (Render)
+// khác tên miền nên cookie bên thứ ba hay bị trình duyệt chặn; header Bearer ổn định hơn.
+const TOKEN_KEY = 'taskflow-token';
+let token = null;
+try {
+  token = localStorage.getItem(TOKEN_KEY);
+} catch {
+  token = null;
+}
+
+export const getToken = () => token;
+
+export function setToken(value) {
+  token = value || null;
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* trình duyệt chặn localStorage thì chỉ giữ trong bộ nhớ */
+  }
+}
+
+let onUnauthorized = null;
+/** AuthProvider đăng ký hàm này để tự đăng xuất khi token hết hạn. */
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn;
+}
+
 async function request(path, { method = 'GET', body, query, signal } = {}) {
   const url = new URL(`${API_URL}/api${path}`);
   for (const [key, value] of Object.entries(query || {})) {
@@ -16,12 +45,10 @@ async function request(path, { method = 'GET', body, query, signal } = {}) {
 
   let res;
   try {
-    res = await fetch(url, {
-      method,
-      signal,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const headers = {};
+    if (body) headers['Content-Type'] = 'application/json';
+    if (token) headers.Authorization = `Bearer ${token}`;
+    res = await fetch(url, { method, signal, headers, body: body ? JSON.stringify(body) : undefined });
   } catch (err) {
     if (err.name === 'AbortError') throw err;
     throw new ApiError('Không kết nối được tới máy chủ', { status: 0 });
@@ -29,6 +56,10 @@ async function request(path, { method = 'GET', body, query, signal } = {}) {
 
   const payload = await res.json().catch(() => ({}));
   if (!res.ok) {
+    // Token hết hạn hoặc bị thu hồi: đăng xuất (trừ khi chính request đăng nhập bị từ chối)
+    if (res.status === 401 && token && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+      onUnauthorized?.(payload?.error?.message);
+    }
     throw new ApiError(payload?.error?.message || `Lỗi ${res.status}`, {
       status: res.status,
       fields: payload?.error?.fields,
@@ -40,6 +71,15 @@ async function request(path, { method = 'GET', body, query, signal } = {}) {
 const tz = () => new Date().getTimezoneOffset();
 
 export const api = {
+  auth: {
+    register: (data) => request('/auth/register', { method: 'POST', body: data }),
+    login: (data) => request('/auth/login', { method: 'POST', body: data }),
+    me: () => request('/auth/me'),
+    update: (data) => request('/auth/me', { method: 'PATCH', body: data }),
+    changePassword: (data) => request('/auth/change-password', { method: 'POST', body: data }),
+    logoutAll: () => request('/auth/logout-all', { method: 'POST' }),
+    remove: (password) => request('/auth/me', { method: 'DELETE', body: { password } }),
+  },
   projects: {
     list: (archived = 'false') => request('/projects', { query: { archived } }),
     get: (id) => request(`/projects/${id}`),

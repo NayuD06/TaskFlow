@@ -21,6 +21,13 @@ export function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: { message: `Giá trị không hợp lệ cho ${err.path}` } });
   }
 
+  // Trùng giá trị unique (vd 2 người đăng ký cùng email một lúc)
+  if (err?.code === 11000) {
+    const key = Object.keys(err.keyPattern || err.keyValue || {})[0] || 'field';
+    const message = key === 'email' ? 'Email này đã được đăng ký' : 'Giá trị đã tồn tại';
+    return res.status(409).json({ error: { message, fields: { [key]: message } } });
+  }
+
   // JSON body sai cú pháp
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: { message: 'Body JSON không hợp lệ' } });
@@ -32,6 +39,7 @@ export function errorHandler(err, req, res, next) {
   res.status(status).json({
     error: {
       message: status >= 500 && isProd ? 'Lỗi máy chủ' : err.message,
+      ...(err.fields && status < 500 ? { fields: err.fields } : {}),
       ...(isProd ? {} : { stack: err.stack }),
     },
   });

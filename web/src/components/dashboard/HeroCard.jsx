@@ -3,6 +3,7 @@ import { CalendarCheck, TriangleAlert } from 'lucide-react';
 import { useEffect, useId } from 'react';
 import { Link } from 'react-router';
 import { formatLongDate, greeting } from '../../lib/dates.js';
+import { firstName, useAuth } from '../auth/AuthContext.jsx';
 import { Card } from '../ui/Motion.jsx';
 
 const R = 62; // bán kính quả cầu nước
@@ -70,6 +71,7 @@ function summary(stats) {
 
 export default function HeroCard({ data }) {
   const now = new Date();
+  const { user } = useAuth();
   return (
     <Card className="relative overflow-hidden !border-white/[0.06] !bg-hero p-6 text-white sm:p-7 lg:col-span-2">
       {/* Sóng trang trí chạy chậm ở đáy thẻ */}
@@ -89,7 +91,10 @@ export default function HeroCard({ data }) {
       <div className="relative flex flex-col-reverse gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-[13px] text-white/60">{formatLongDate(now)}</p>
-          <h1 className="mt-1.5 font-display text-[26px] leading-tight font-bold sm:text-[30px]">{greeting(now)}</h1>
+          <h1 className="mt-1.5 font-display text-[26px] leading-tight font-bold sm:text-[30px]">
+            {greeting(now)}
+            {user?.name ? `, ${firstName(user.name)}` : ''}
+          </h1>
           <p className="mt-2 max-w-md text-[14px] leading-relaxed text-white/75">{summary(data?.stats)}</p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link

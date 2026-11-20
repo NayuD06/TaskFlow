@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import App from './App.jsx';
+import { AuthProvider } from './components/auth/AuthContext.jsx';
 import { UIProvider } from './components/shell/UIContext.jsx';
 import { ToastProvider } from './components/ui/Toasts.jsx';
 import './index.css';
@@ -14,7 +15,7 @@ const queryClient = new QueryClient({
       staleTime: 20 * 1000,
       refetchOnWindowFocus: true,
       // Render free tier có thể mất ~30-50 giây để thức dậy
-      retry: (count, err) => err?.status !== 404 && count < 2,
+      retry: (count, err) => ![400, 401, 403, 404].includes(err?.status) && count < 2,
     },
   },
 });
@@ -25,9 +26,11 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <MotionConfig reducedMotion="user">
           <ToastProvider>
-            <UIProvider>
-              <App />
-            </UIProvider>
+            <AuthProvider>
+              <UIProvider>
+                <App />
+              </UIProvider>
+            </AuthProvider>
           </ToastProvider>
         </MotionConfig>
       </BrowserRouter>

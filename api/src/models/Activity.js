@@ -12,6 +12,7 @@ export const ACTIVITY_TYPES = [
 // Nhật ký hoạt động. Lưu kèm tên task/dự án tại thời điểm đó để vẫn đọc được khi đã bị xoá.
 const activitySchema = new mongoose.Schema(
   {
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: { type: String, enum: ACTIVITY_TYPES, required: true },
     task: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', default: null },
     taskTitle: { type: String, default: '' },
@@ -24,6 +25,6 @@ const activitySchema = new mongoose.Schema(
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false }
 );
 
-activitySchema.index({ createdAt: -1 });
+activitySchema.index({ owner: 1, createdAt: -1 });
 
 export const Activity = mongoose.model('Activity', activitySchema);

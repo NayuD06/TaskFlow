@@ -12,9 +12,10 @@ function notFound() {
   return err;
 }
 
-async function findTaskOr404(id) {
+/** Chỉ tìm trong công việc của chính người dùng. */
+async function findTaskOr404(id, owner) {
   if (!mongoose.isValidObjectId(id)) throw notFound();
-  const task = await Task.findById(id);
+  const task = await Task.findOne({ _id: id, owner });
   if (!task) throw notFound();
   return task;
 }
@@ -51,6 +52,7 @@ export async function listTasks(req, res) {
     return res.json({ data: [], count: 0 });
   }
   const pipeline = buildListPipeline(req.query, {
+    owner: req.user._id,
     tzOffset: parseTzOffset(req.query.tzOffset),
     toId: (id) => new mongoose.Types.ObjectId(String(id)),
   });
@@ -60,16 +62,16 @@ export async function listTasks(req, res) {
 
 // GET /api/tasks/:id
 export async function getTask(req, res) {
-  const task = await findTaskOr404(req.params.id);
+  const task = await findTaskOr404(req.params.id, req.user._id);
   await respondTask(res, task);
 }
 
 // POST /api/tasks
 export async function createTask(req, res) {
   const data = pickTaskFields(req.body);
-  const project = await findProjectOr404(data.project);
+  const project = await findProjectOr404(data.project, req.user._id);
   const status = STATUSES.includes(data.status) ? data.status : 'todo';
-  const task = await Task.create({ ...data, status, order: await orderFor(project._id, status) });
+  const task = await Task.create({ ...data, owner: req.user._id, status, order: await orderFor(project._id, status) });
   await logActivity('task_created', { task, project });
   if (task.status === 'done') await logActivity('task_completed', { task, project });
   await respondTask(res, task, 201);
@@ -77,10 +79,10 @@ export async function createTask(req, res) {
 
 // PATCH /api/tasks/:id
 export async function updateTask(req, res) {
-  const task = await findTaskOr404(req.params.id);
+  const task = await findTaskOr404(req.params.id, req.user._id);
   const before = task.status;
   const data = pickTaskFields(req.body);
-  if (data.project) await findProjectOr404(data.project);
+  if (data.project) await findProjectOr404(data.project, req.user._id);
   if (data.status && data.status !== before) data.order = await orderFor(data.project || task.project, data.status);
   task.set(data);
   await task.save();
@@ -97,7 +99,7 @@ async function logStatusChange(task, from) {
 
 // PATCH /api/tasks/:id/toggle  (xong <-> chưa xong)
 export async function toggleTask(req, res) {
-  const task = await findTaskOr404(req.params.id);
+  const task = await findTaskOr404(req.params.id, req.user._id);
   const before = task.status;
   task.status = before === 'done' ? 'todo' : 'done';
   task.order = await orderFor(task.project, task.status);
@@ -108,7 +110,7 @@ export async function toggleTask(req, res) {
 
 // POST /api/tasks/:id/move  { status, index }  kéo thả trên bảng Kanban
 export async function moveTask(req, res) {
-  const task = await findTaskOr404(req.params.id);
+  const task = await findTaskOr404(req.params.id, req.user._id);
   const { status = task.status } = req.body;
   if (!STATUSES.includes(status)) {
     const err = new Error('Trạng thái không hợp lệ');
@@ -118,7 +120,7 @@ export async function moveTask(req, res) {
   const before = task.status;
 
   // Lấy các task khác trong cột đích theo thứ tự hiện tại, chèn task vào vị trí index
-  const column = await Task.find({ project: task.project, status, _id: { $ne: task._id } })
+  const column = await Task.find({ owner: task.owner, project: task.project, status, _id: { $ne: task._id } })
     .sort({ order: 1, createdAt: -1 })
     .select('_id')
     .lean();
@@ -140,7 +142,7 @@ export async function moveTask(req, res) {
 
 // DELETE /api/tasks/:id
 export async function deleteTask(req, res) {
-  const task = await findTaskOr404(req.params.id);
+  const task = await findTaskOr404(req.params.id, req.user._id);
   await task.deleteOne();
   const project = await Project.findById(task.project).lean();
   await logActivity('task_deleted', { task, project });
@@ -154,8 +156,12 @@ export async function clearDone(req, res) {
     err.status = 400;
     throw err;
   }
-  const filter = { status: 'done' };
-  if (req.query.project && mongoose.isValidObjectId(req.query.project)) filter.project = req.query.project;
+  if (!mongoose.isValidObjectId(req.query.project)) {
+    const err = new Error('Thiếu hoặc sai mã dự án');
+    err.status = 400;
+    throw err;
+  }
+  const filter = { owner: req.user._id, status: 'done', project: req.query.project };
   const { deletedCount } = await Task.deleteMany(filter);
   res.json({ data: { deletedCount } });
 }

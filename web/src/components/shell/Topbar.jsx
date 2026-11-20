@@ -11,6 +11,7 @@ function useCrumbs() {
   if (pathname === '/') return [{ label: 'Tổng quan' }];
   if (pathname === '/my-tasks') return [{ label: 'Việc của tôi' }];
   if (pathname === '/projects') return [{ label: 'Dự án' }];
+  if (pathname === '/settings') return [{ label: 'Tài khoản' }];
   if (match) return [{ label: 'Dự án', to: '/projects' }, { label: project?.name ?? '…' }];
   return [{ label: 'Không tìm thấy' }];
 }

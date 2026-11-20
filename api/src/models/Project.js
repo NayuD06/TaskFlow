@@ -16,6 +16,12 @@ export const PROJECT_COLORS = [
 
 const projectSchema = new mongoose.Schema(
   {
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: [true, 'Tên dự án là bắt buộc'],
@@ -40,5 +46,7 @@ const projectSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
+
+projectSchema.index({ owner: 1, archived: 1, updatedAt: -1 });
 
 export const Project = mongoose.model('Project', projectSchema);

@@ -18,6 +18,13 @@ const checklistItemSchema = new mongoose.Schema(
 
 const taskSchema = new mongoose.Schema(
   {
+    // Lưu chủ sở hữu ngay trên task để lọc nhanh, không cần tra dự án
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
@@ -68,6 +75,6 @@ taskSchema.pre('save', function syncCompletedAt() {
 });
 
 taskSchema.index({ project: 1, status: 1, order: 1 });
-taskSchema.index({ deadline: 1 });
+taskSchema.index({ owner: 1, status: 1, deadline: 1 });
 
 export const Task = mongoose.model('Task', taskSchema);

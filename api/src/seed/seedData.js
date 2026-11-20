@@ -11,6 +11,12 @@ function at(days, hour = 17, minute = 0, now = Date.now()) {
 
 const list = (...items) => items.map(([text, done = false]) => ({ text, done }));
 
+// Tài khoản mẫu. Mật khẩu chỉ dùng cho demo, đã công khai trong README nên đừng dùng cho dữ liệu thật.
+export const DEMO_USERS = [
+  { name: 'Tài khoản Demo', email: 'demo@taskflow.dev', password: 'Demo@123456', avatarColor: 'blue', isDemo: true },
+  { name: 'Minh Trần', email: 'minh@taskflow.dev', password: 'Minh@123456', avatarColor: 'teal', isDemo: false },
+];
+
 export function buildSeed(now = Date.now()) {
   const t = (days, hour, minute) => at(days, hour, minute, now);
 

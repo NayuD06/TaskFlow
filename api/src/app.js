@@ -4,7 +4,10 @@ import helmet from 'helmet';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import { env, isProd } from './config/env.js';
+import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundRoute } from './middleware/errorHandler.js';
+import { apiLimiter } from './middleware/rateLimit.js';
+import { authRouter } from './routes/authRoutes.js';
 import { insightRouter, projectRouter, taskRouter } from './routes/taskRoutes.js';
 
 // Cho phép wildcard trong CORS_ORIGIN, vd: https://taskflow-*.vercel.app
@@ -45,9 +48,13 @@ export function createApp() {
     });
   });
 
-  app.use('/api/tasks', taskRouter);
-  app.use('/api/projects', projectRouter);
-  app.use('/api', insightRouter);
+  app.use('/api', apiLimiter);
+  app.use('/api/auth', authRouter);
+
+  // Mọi route dữ liệu đều cần đăng nhập, và chỉ trả về dữ liệu của chính người đó
+  app.use('/api/tasks', requireAuth, taskRouter);
+  app.use('/api/projects', requireAuth, projectRouter);
+  app.use('/api', requireAuth, insightRouter);
 
   app.use(notFoundRoute);
   app.use(errorHandler);

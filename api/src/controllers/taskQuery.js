@@ -26,8 +26,9 @@ function escapeRegex(text) {
  *  search:   tìm theo tên hoặc mô tả
  *  sort:     board | newest | oldest | deadline | priority
  */
-export function buildListPipeline(query = {}, { now = new Date(), tzOffset = 0, toId = (v) => v } = {}) {
-  const match = {};
+export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffset = 0, toId = (v) => v } = {}) {
+  // Luôn giới hạn trong dữ liệu của người đang đăng nhập
+  const match = owner ? { owner } : {};
   const { project, status, priority, due, search, sort } = query;
 
   if (project) match.project = toId(project);
