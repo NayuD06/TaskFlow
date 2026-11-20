@@ -26,6 +26,8 @@ import { useToast } from '../components/ui/Toasts.jsx';
 import { API_URL } from '../lib/api.js';
 import { useTheme } from '../lib/theme.js';
 import { tr } from '../lib/i18n.js';
+import { AUTHOR, REPO_URL } from '../lib/about.js';
+import GithubMark from '../components/ui/GithubMark.jsx';
 
 const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL;
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
@@ -67,7 +69,10 @@ const FEATURES = [
 ];
 
 const FAQ = [
-  { q: tr('TaskFlow có mất phí không?'), a: tr('Không. TaskFlow miễn phí, bạn chỉ cần một email để tạo tài khoản.') },
+  {
+    q: tr('TaskFlow có mất phí không?'),
+    a: tr('Hiện tại TaskFlow đang mở cho mọi người dùng thử miễn phí. Bạn chỉ cần một email để tạo tài khoản, không cần thẻ thanh toán.'),
+  },
   {
     q: tr('Dữ liệu của tôi có an toàn không?'),
     a: tr(
@@ -274,7 +279,7 @@ function Hero({ reduce, demo }) {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60 motion-reduce:hidden" />
               <span className="relative inline-flex size-2 rounded-full bg-success" />
             </span>
-            {tr('Miễn phí · Không cần cài đặt')}
+            {tr('Đang mở dùng thử miễn phí · Không cần cài đặt')}
           </motion.p>
 
           <div className="mt-6">
@@ -457,7 +462,7 @@ function FinalCta({ demo }) {
     <section className="px-4 pb-16 sm:px-6">
       <motion.div
         {...reveal}
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[radial-gradient(120%_120%_at_0%_0%,#123a9c_0%,#06143a_55%,#040b22_100%)] px-6 pt-14 pb-28 text-center text-white sm:px-10 sm:pt-20 sm:pb-36"
+        className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[radial-gradient(120%_120%_at_0%_0%,#1a47b8_0%,#0d2566_55%,#0a1b4d_100%)] px-6 pt-14 pb-28 text-center text-white sm:px-10 sm:pt-20 sm:pb-36"
       >
         <h2 className="mx-auto max-w-2xl font-display text-[28px] leading-tight font-bold tracking-tight sm:text-[44px]">
           {tr('Bể của bạn đang chờ được đổ đầy.')}
@@ -509,8 +514,23 @@ function Footer() {
           <span className="font-display font-bold text-ink">TaskFlow</span>
           <span className="text-faint">© {new Date().getFullYear()}</span>
         </div>
-        <p className="text-faint">{tr('Làm bằng React, Express và MongoDB.')}</p>
+        <p className="text-faint">
+          {tr('Thiết kế và phát triển bởi')}{' '}
+          <a href={AUTHOR.url} target="_blank" rel="noreferrer" className="font-semibold text-muted underline-offset-4 hover:text-ink hover:underline">
+            {AUTHOR.name}
+          </a>
+        </p>
         <div className="flex items-center gap-4">
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="grid size-8 place-items-center rounded-lg hover:bg-surface-2 hover:text-ink"
+            aria-label={tr('Mã nguồn trên GitHub')}
+            title={tr('Mã nguồn trên GitHub')}
+          >
+            <GithubMark className="size-[18px]" />
+          </a>
           <LangSwitch />
           <Link to="/login" className="hover:text-ink">
             {tr('Đăng nhập')}

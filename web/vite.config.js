@@ -1,6 +1,9 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 /**
  * Thẻ SEO cần đường dẫn tuyệt đối (ảnh xem trước khi chia sẻ link lên Facebook, Zalo...).
@@ -43,6 +46,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react(), tailwindcss(), seo(env)],
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     server: {
       port: 5173,
     },

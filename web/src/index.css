@@ -33,22 +33,22 @@
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --canvas: #04060b;
-  --surface: #0b101b;
-  --surface-2: #111827;
-  --surface-3: #18213a;
-  --line: #1a2336;
-  --line-strong: #27324c;
+  --canvas: #121b2d;
+  --surface: #19233a;
+  --surface-2: #1f2a43;
+  --surface-3: #283550;
+  --line: #2b3752;
+  --line-strong: #3b4868;
   --ink: #e8eef9;
-  --muted: #8a96b3;
-  --faint: #7a85a2;
+  --muted: #a3aec9;
+  --faint: #929dba;
   --accent: #2a62f2;
-  --accent-hi: #6b95ff;
-  --accent-soft: rgb(47 107 255 / 0.15);
-  --hero: #06143a;
-  --success: #22c38e;
+  --accent-hi: #82a6ff;
+  --accent-soft: rgb(47 107 255 / 0.18);
+  --hero: #0f2259;
+  --success: #2fd29b;
   --warning: #f5a524;
-  --danger: #ff4d6a;
+  --danger: #ff7d92;
   --success-solid: #0b8058;
   --warning-solid: #a85f00;
   --danger-solid: #d92845;
@@ -240,7 +240,7 @@
 
 .tone-danger {
   color: var(--danger);
-  background: color-mix(in oklab, var(--danger) 14%, transparent);
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
 }
 .tone-warning {
   color: var(--warning);
@@ -330,4 +330,27 @@
   .bubble {
     opacity: 0;
   }
+}
+
+/* Đổi sáng/tối: màu mới lan ra như gợn nước từ nút vừa bấm (xem useTheme trong lib/theme.js) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+/* Trình duyệt chưa có View Transitions thì chuyển màu mờ dần */
+.theme-fade,
+.theme-fade *,
+.theme-fade *::before,
+.theme-fade *::after {
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    color 0.4s ease,
+    fill 0.4s ease,
+    stroke 0.4s ease,
+    box-shadow 0.4s ease !important;
 }

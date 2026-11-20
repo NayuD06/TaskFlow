@@ -2,6 +2,17 @@
   "name": "taskflow-api",
   "version": "1.0.0",
   "description": "REST API cho TaskFlow (Express + MongoDB/Mongoose)",
+  "author": "Duy An (https://github.com/NayuD06)",
+  "license": "MIT",
+  "homepage": "https://github.com/NayuD06/TaskFlow#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NayuD06/TaskFlow.git",
+    "directory": "api"
+  },
+  "bugs": {
+    "url": "https://github.com/NayuD06/TaskFlow/issues"
+  },
   "type": "module",
   "main": "src/server.js",
   "scripts": {

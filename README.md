@@ -1,6 +1,14 @@
 # TaskFlow
 
-Ứng dụng quản lý dự án và công việc cá nhân, tông **đen + xanh dương**, lấy cảm hứng từ những bể nước: mỗi dự án là một bể, xong càng nhiều việc thì nước càng dâng cao.
+Ứng dụng quản lý dự án và công việc cá nhân, tông **xanh dương + xanh đêm**, lấy cảm hứng từ những bể nước: mỗi dự án là một bể, xong càng nhiều việc thì nước càng dâng cao.
+
+Đồ án cá nhân của **Duy An** ([@NayuD06](https://github.com/NayuD06)). Đang mở cho mọi người dùng thử miễn phí.
+
+![Trang Tổng quan, giao diện tối](docs/screenshots/dashboard-dark.webp)
+
+| Bảng Kanban | Giao diện sáng | Trên điện thoại |
+| --- | --- | --- |
+| ![Bảng Kanban kéo thả](docs/screenshots/board-dark.webp) | ![Trang Tổng quan, giao diện sáng](docs/screenshots/dashboard-light.webp) | ![Bảng Kanban trên điện thoại](docs/screenshots/mobile-light.webp) |
 
 - **web/**: React 19 + Vite + Tailwind CSS v4 + Motion + TanStack Query + dnd-kit
 - **api/**: Node.js + Express 5 + MongoDB (Mongoose) + JWT + bcrypt
@@ -55,7 +63,8 @@ Mỗi người tự đăng ký tài khoản và chỉ thấy dữ liệu của c
 - **Ctrl K** (hoặc ⌘K, hoặc **/**): tìm nhanh việc, dự án, trang, không cần gõ dấu. Gõ `#nhãn` để tìm theo nhãn
 - **Nhắc việc**: chuông trên thanh trên báo các việc trễ hạn và sắp đến hạn trong 24 giờ. Bật "Báo trước 1 giờ" để nhận thông báo của trình duyệt
 - **Song ngữ Tiếng Việt / English**: nút đổi ngôn ngữ ở thanh trên, trang giới thiệu, trang đăng nhập và trang Tài khoản. Lần đầu mở web tự chọn theo ngôn ngữ trình duyệt
-- Giao diện tối (mặc định) và sáng, dùng tốt trên điện thoại, cài được như ứng dụng (PWA)
+- Giao diện tối (mặc định, tông xanh đêm dịu mắt) và sáng. Khi đổi, màu mới lan ra như một gợn nước từ chỗ bạn bấm
+- Dùng tốt trên điện thoại, cài được như ứng dụng (PWA)
 - Trang 404 riêng với số 404 làm bằng nước
 
 ### Phím tắt
@@ -130,8 +139,10 @@ todo-list/
 │   ├── public/               # icon, ảnh og.jpg, manifest, service worker
 │   ├── vercel.json
 │   └── .env.example
+├── docs/screenshots/         # ảnh chụp màn hình cho README
 ├── render.yaml               # Blueprint deploy API lên Render
 ├── DEPLOY.md                 # hướng dẫn deploy từng bước
+├── LICENSE                   # giấy phép MIT
 └── package.json              # script chạy cả web + api cùng lúc
 ```
 
@@ -266,3 +277,13 @@ Màu hợp lệ: `blue`, `sky`, `cyan`, `teal`, `green`, `amber`, `orange`, `ros
 | GET | `/dashboard?tzOffset=-420` | Số liệu trang Tổng quan: tuần này, thẻ số liệu, nhịp hoàn thành 28 ngày, phân bố, tiến độ dự án, việc cần chú ý |
 | GET | `/activity?type=all&limit=30` | Nhật ký hoạt động. `type`: `all`, `completed`, `created` |
 | GET | `/health` | Kiểm tra server và kết nối DB |
+
+## Tác giả
+
+**Duy An**, GitHub [@NayuD06](https://github.com/NayuD06).
+
+Gặp lỗi hoặc có ý tưởng hay? Mở một [issue](https://github.com/NayuD06/TaskFlow/issues) nhé.
+
+## Giấy phép
+
+[MIT](LICENSE). Bạn được xem, dùng lại và sửa code, miễn là giữ lại thông tin bản quyền của tác giả.

@@ -551,7 +551,8 @@ export default {
   'Mật khẩu mã hoá bằng bcrypt, đăng nhập bằng JWT. Dữ liệu của bạn chỉ mình bạn xem được.':
     'Passwords are hashed with bcrypt and sessions use JWT. Only you can see your data.',
   'TaskFlow có mất phí không?': 'Is TaskFlow free?',
-  'Không. TaskFlow miễn phí, bạn chỉ cần một email để tạo tài khoản.': 'Yes. TaskFlow is free, all you need is an email to sign up.',
+  'Hiện tại TaskFlow đang mở cho mọi người dùng thử miễn phí. Bạn chỉ cần một email để tạo tài khoản, không cần thẻ thanh toán.':
+    'TaskFlow is currently open for everyone to try for free. All you need is an email to sign up, no payment card required.',
   'Dữ liệu của tôi có an toàn không?': 'Is my data safe?',
   'Mật khẩu được mã hoá một chiều bằng bcrypt trước khi lưu, nên kể cả người quản trị cũng không đọc được. Mỗi tài khoản chỉ xem và sửa được dữ liệu của chính mình.':
     'Passwords are hashed one-way with bcrypt before saving, so not even an admin can read them. Each account can only see and edit its own data.',
@@ -575,7 +576,7 @@ export default {
   'Bắt đầu miễn phí': 'Start for free',
   'Làm xong việc, nhìn tiến độ': 'Finish tasks, watch your progress',
   'dâng lên.': 'rise.',
-  'Miễn phí · Không cần cài đặt': 'Free · Nothing to install',
+  'Đang mở dùng thử miễn phí · Không cần cài đặt': 'Free to try now · Nothing to install',
   'TaskFlow gom dự án, công việc và hạn chót vào một chỗ. Kéo thả trên bảng Kanban, xem lịch tháng, và nhìn mực nước trong mỗi dự án dâng cao mỗi khi bạn làm xong một việc.':
     'TaskFlow keeps your projects, tasks and deadlines in one place. Drag cards on a Kanban board, browse the monthly calendar, and watch each project’s water level rise every time you finish something.',
   'Tạo tài khoản miễn phí': 'Create a free account',
@@ -591,7 +592,6 @@ export default {
   'Bể của bạn đang chờ được đổ đầy.': 'Your tank is waiting to be filled.',
   'Tạo tài khoản chưa tới một phút. Mình tạo sẵn một dự án hướng dẫn để bạn làm quen ngay.':
     'Signing up takes under a minute. We’ll set up a starter project so you can get going right away.',
-  'Làm bằng React, Express và MongoDB.': 'Built with React, Express and MongoDB.',
   'TaskFlow · Quản lý dự án và công việc': 'TaskFlow · Project and task manager',
 
   // ---------- 404 ----------
@@ -651,4 +651,12 @@ export default {
   'Mỗi nhãn tối đa 24 ký tự': 'Each tag can be at most 24 characters',
   'Chỉ hỗ trợ xoá hàng loạt với ?status=done': 'Bulk delete only supports ?status=done',
   'thẻ kéo được': 'draggable card',
+  'Thiết kế và phát triển bởi': 'Designed and built by',
+  'Mã nguồn trên GitHub': 'Source code on GitHub',
+  'Về TaskFlow': 'About TaskFlow',
+  'Phiên bản {version}': 'Version {version}',
+  'TaskFlow là đồ án cá nhân của': 'TaskFlow is a personal project by',
+  ', làm bằng React, Express và MongoDB. Bạn gặp lỗi hoặc muốn góp ý thì cứ mở một issue trên GitHub nhé.':
+    ', built with React, Express and MongoDB. Found a bug or have an idea? Feel free to open an issue on GitHub.',
+  'Báo lỗi hoặc góp ý': 'Report a bug or send feedback',
 };

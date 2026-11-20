@@ -1,5 +1,5 @@
 import { LANGS, lang, locale, setLang } from '../lib/i18n.js';
-import { Check, ImageUp, KeyRound, Languages, LoaderCircle, LogOut, MonitorSmartphone, ShieldAlert, Trash2, UserRound } from 'lucide-react';
+import { Bug, Check, ImageUp, Info, KeyRound, Languages, LoaderCircle, LogOut, MonitorSmartphone, ShieldAlert, Trash2, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../components/auth/AuthContext.jsx';
@@ -12,6 +12,8 @@ import { applyAccent } from '../lib/accent.js';
 import { AVATAR_EMOJIS, HUES, HUE_NAMES } from '../lib/constants.js';
 import { avatarFromFile } from '../lib/image.js';
 import { tr } from '../lib/i18n.js';
+import { APP_VERSION, AUTHOR, ISSUES_URL, REPO_URL } from '../lib/about.js';
+import GithubMark from '../components/ui/GithubMark.jsx';
 
 const joined = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -437,6 +439,34 @@ export default function Settings() {
             {loggingOut ? <LoaderCircle className="size-4 animate-spin" /> : <MonitorSmartphone className="size-4" aria-hidden="true" />}
             {tr('Đăng xuất mọi thiết bị')}
           </button>
+        </div>
+      </Section>
+
+      <Section icon={Info} title={tr('Về TaskFlow')} description={tr('Phiên bản {version}', { version: APP_VERSION })}>
+        <p className="text-[13px] leading-relaxed text-muted">
+          {tr('TaskFlow là đồ án cá nhân của')}{' '}
+          <a href={AUTHOR.url} target="_blank" rel="noreferrer" className="font-semibold text-ink underline-offset-4 hover:underline">
+            {AUTHOR.name}
+          </a>
+          {tr(', làm bằng React, Express và MongoDB. Bạn gặp lỗi hoặc muốn góp ý thì cứ mở một issue trên GitHub nhé.')}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-line px-4 text-[13px] font-semibold hover:bg-surface-2"
+          >
+            <GithubMark /> {tr('Mã nguồn trên GitHub')}
+          </a>
+          <a
+            href={ISSUES_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-line px-4 text-[13px] font-semibold hover:bg-surface-2"
+          >
+            <Bug className="size-4" aria-hidden="true" /> {tr('Báo lỗi hoặc góp ý')}
+          </a>
         </div>
       </Section>
 

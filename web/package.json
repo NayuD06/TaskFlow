@@ -1,6 +1,18 @@
 {
   "name": "taskflow-web",
   "private": true,
+  "description": "TaskFlow web (React + Vite)",
+  "author": "Duy An (https://github.com/NayuD06)",
+  "license": "MIT",
+  "homepage": "https://github.com/NayuD06/TaskFlow#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NayuD06/TaskFlow.git",
+    "directory": "web"
+  },
+  "bugs": {
+    "url": "https://github.com/NayuD06/TaskFlow/issues"
+  },
   "version": "1.0.0",
   "type": "module",
   "scripts": {
