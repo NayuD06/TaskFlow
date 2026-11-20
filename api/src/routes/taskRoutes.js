@@ -12,6 +12,7 @@ import {
   createTask,
   deleteTask,
   getTask,
+  listTags,
   listTasks,
   moveTask,
   toggleTask,
@@ -20,6 +21,7 @@ import {
 
 export const taskRouter = Router();
 taskRouter.route('/').get(listTasks).post(createTask).delete(clearDone);
+taskRouter.get('/tags', listTags);
 taskRouter.route('/:id').get(getTask).patch(updateTask).delete(deleteTask);
 taskRouter.patch('/:id/toggle', toggleTask);
 taskRouter.post('/:id/move', moveTask);

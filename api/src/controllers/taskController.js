@@ -46,6 +46,18 @@ async function topOrder(projectId, status) {
 
 const orderFor = (projectId, status) => (status === 'done' ? topOrder(projectId, status) : nextOrder(projectId, status));
 
+// GET /api/tasks/tags  -> các nhãn đang dùng kèm số lượng việc, nhiều nhất trước
+export async function listTags(req, res) {
+  const rows = await Task.aggregate([
+    { $match: { owner: req.user._id } },
+    { $unwind: '$tags' },
+    { $group: { _id: { $toLower: '$tags' }, name: { $first: '$tags' }, count: { $sum: 1 } } },
+    { $sort: { count: -1, name: 1 } },
+    { $limit: 50 },
+  ]);
+  res.json({ data: rows.map((r) => ({ name: r.name, count: r.count })) });
+}
+
 // GET /api/tasks
 export async function listTasks(req, res) {
   if (req.query.project && !mongoose.isValidObjectId(req.query.project)) {

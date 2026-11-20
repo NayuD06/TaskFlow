@@ -60,23 +60,23 @@ export function buildSeed(now = Date.now()) {
 
   const tasks = [
     // Đồ án tốt nghiệp
-    { projectKey: 'thesis', title: 'Viết chương 3: Thiết kế hệ thống', description: 'Sơ đồ ERD, use case, sequence cho luồng giao việc.', status: 'doing', priority: 'urgent', deadline: t(1, 17), createdAt: t(-20, 9), checklist: list(['Sơ đồ ERD', true], ['Use case tổng quát', true], ['Sequence: giao việc'], ['Sequence: thông báo']) },
-    { projectKey: 'thesis', title: 'Gửi bản nháp cho thầy hướng dẫn', description: 'Gửi qua email kèm file PDF, hỏi lịch gặp tuần sau.', status: 'todo', priority: 'high', deadline: t(-1, 22), createdAt: t(-10, 14) },
-    { projectKey: 'thesis', title: 'Chuẩn bị slide bảo vệ', description: '15 slide, tập trung vào demo và kết quả.', status: 'todo', priority: 'high', deadline: t(9, 9), createdAt: t(-6, 20), checklist: list(['Dàn ý'], ['Thiết kế template'], ['Chèn video demo']) },
-    { projectKey: 'thesis', title: 'Quay video demo 3 phút', status: 'todo', priority: 'medium', deadline: t(6, 21), createdAt: t(-5, 11) },
-    { projectKey: 'thesis', title: 'Khảo sát 30 người dùng thử', description: 'Google Form, tổng hợp kết quả vào chương 5.', status: 'doing', priority: 'medium', deadline: t(3, 18), createdAt: t(-9, 15) },
+    { projectKey: 'thesis', title: 'Viết chương 3: Thiết kế hệ thống', tags: ['báo cáo'], description: 'Sơ đồ ERD, use case, sequence cho luồng giao việc.', status: 'doing', priority: 'urgent', deadline: t(1, 17), createdAt: t(-20, 9), checklist: list(['Sơ đồ ERD', true], ['Use case tổng quát', true], ['Sequence: giao việc'], ['Sequence: thông báo']) },
+    { projectKey: 'thesis', title: 'Gửi bản nháp cho thầy hướng dẫn', tags: ['báo cáo'], description: 'Gửi qua email kèm file PDF, hỏi lịch gặp tuần sau.', status: 'todo', priority: 'high', deadline: t(-1, 22), createdAt: t(-10, 14) },
+    { projectKey: 'thesis', title: 'Chuẩn bị slide bảo vệ', tags: ['bảo vệ'], description: '15 slide, tập trung vào demo và kết quả.', status: 'todo', priority: 'high', deadline: t(9, 9), createdAt: t(-6, 20), checklist: list(['Dàn ý'], ['Thiết kế template'], ['Chèn video demo']) },
+    { projectKey: 'thesis', title: 'Quay video demo 3 phút', tags: ['bảo vệ'], status: 'todo', priority: 'medium', deadline: t(6, 21), createdAt: t(-5, 11) },
+    { projectKey: 'thesis', title: 'Khảo sát 30 người dùng thử', tags: ['nghiên cứu'], description: 'Google Form, tổng hợp kết quả vào chương 5.', status: 'doing', priority: 'medium', deadline: t(3, 18), createdAt: t(-9, 15) },
     { projectKey: 'thesis', title: 'Hoàn thành chương 2: Cơ sở lý thuyết', status: 'done', priority: 'high', deadline: t(-8, 17), createdAt: t(-23, 9), completedAt: t(-9, 22) },
     { projectKey: 'thesis', title: 'Chốt đề cương với hội đồng', status: 'done', priority: 'urgent', deadline: t(-18, 10), createdAt: t(-24, 9), completedAt: t(-19, 16) },
     { projectKey: 'thesis', title: 'Đọc 5 bài báo liên quan', status: 'done', priority: 'low', createdAt: t(-22, 13), completedAt: t(-15, 21) },
     { projectKey: 'thesis', title: 'Viết chương 1: Tổng quan', status: 'done', priority: 'medium', deadline: t(-12, 17), createdAt: t(-22, 10), completedAt: t(-13, 23) },
 
     // Website TaskFlow
-    { projectKey: 'web', title: 'Thiết kế lại giao diện dashboard', description: 'Tông đen + xanh dương, có chế độ sáng.', status: 'doing', priority: 'high', deadline: t(0, 20), createdAt: t(-4, 9), checklist: list(['Khung sidebar + header', true], ['Thẻ số liệu', true], ['Biểu đồ hoàn thành'], ['Responsive mobile']) },
-    { projectKey: 'web', title: 'Kéo thả task giữa các cột', description: 'Dùng dnd-kit, hỗ trợ cả bàn phím.', status: 'todo', priority: 'high', deadline: t(2, 17), createdAt: t(-3, 10) },
-    { projectKey: 'web', title: 'Fix lỗi CORS trên Render', description: 'Preview của Vercel bị chặn, cần thêm wildcard.', status: 'todo', priority: 'urgent', deadline: t(-2, 12), createdAt: t(-5, 16) },
-    { projectKey: 'web', title: 'Viết unit test cho API', status: 'todo', priority: 'medium', deadline: t(5, 17), createdAt: t(-7, 10) },
+    { projectKey: 'web', title: 'Thiết kế lại giao diện dashboard', tags: ['frontend'], description: 'Tông đen + xanh dương, có chế độ sáng.', status: 'doing', priority: 'high', deadline: t(0, 20), createdAt: t(-4, 9), checklist: list(['Khung sidebar + header', true], ['Thẻ số liệu', true], ['Biểu đồ hoàn thành'], ['Responsive mobile']) },
+    { projectKey: 'web', title: 'Kéo thả task giữa các cột', tags: ['frontend'], description: 'Dùng dnd-kit, hỗ trợ cả bàn phím.', status: 'todo', priority: 'high', deadline: t(2, 17), createdAt: t(-3, 10) },
+    { projectKey: 'web', title: 'Fix lỗi CORS trên Render', tags: ['backend', 'bug'], description: 'Preview của Vercel bị chặn, cần thêm wildcard.', status: 'todo', priority: 'urgent', deadline: t(-2, 12), createdAt: t(-5, 16) },
+    { projectKey: 'web', title: 'Viết unit test cho API', tags: ['backend'], status: 'todo', priority: 'medium', deadline: t(5, 17), createdAt: t(-7, 10) },
     { projectKey: 'web', title: 'Thêm chế độ lịch tháng', status: 'todo', priority: 'low', deadline: t(12, 17), createdAt: t(-2, 21) },
-    { projectKey: 'web', title: 'Tối ưu Lighthouse trên mobile', status: 'todo', priority: 'low', createdAt: t(-1, 22) },
+    { projectKey: 'web', title: 'Tối ưu Lighthouse trên mobile', tags: ['frontend'], status: 'todo', priority: 'low', createdAt: t(-1, 22) },
     { projectKey: 'web', title: 'Dựng API dự án và thống kê', status: 'done', priority: 'high', deadline: t(-3, 17), createdAt: t(-12, 9), completedAt: t(-3, 15) },
     { projectKey: 'web', title: 'Tạo cluster MongoDB Atlas', status: 'done', priority: 'medium', createdAt: t(-20, 10), completedAt: t(-18, 11) },
     { projectKey: 'web', title: 'Khởi tạo repo và cấu trúc web/ api/', status: 'done', priority: 'medium', createdAt: t(-21, 10), completedAt: t(-20, 22) },
@@ -84,9 +84,9 @@ export function buildSeed(now = Date.now()) {
     { projectKey: 'web', title: 'Deploy bản thử lên Vercel', status: 'done', priority: 'medium', deadline: t(-5, 17), createdAt: t(-11, 9), completedAt: t(-6, 20) },
 
     // IELTS
-    { projectKey: 'english', title: 'Làm đề Reading Cambridge 18 - Test 2', status: 'todo', priority: 'medium', deadline: t(0, 21, 30), createdAt: t(-2, 8) },
-    { projectKey: 'english', title: 'Viết Task 2: chủ đề môi trường', description: '250 từ, nhờ bạn chấm theo 4 tiêu chí.', status: 'doing', priority: 'high', deadline: t(1, 22), createdAt: t(-3, 20) },
-    { projectKey: 'english', title: 'Học 30 từ vựng chủ đề Technology', status: 'todo', priority: 'low', deadline: t(4, 21), createdAt: t(-1, 7) },
+    { projectKey: 'english', title: 'Làm đề Reading Cambridge 18 - Test 2', tags: ['reading'], status: 'todo', priority: 'medium', deadline: t(0, 21, 30), createdAt: t(-2, 8) },
+    { projectKey: 'english', title: 'Viết Task 2: chủ đề môi trường', tags: ['writing'], description: '250 từ, nhờ bạn chấm theo 4 tiêu chí.', status: 'doing', priority: 'high', deadline: t(1, 22), createdAt: t(-3, 20) },
+    { projectKey: 'english', title: 'Học 30 từ vựng chủ đề Technology', tags: ['từ vựng'], status: 'todo', priority: 'low', deadline: t(4, 21), createdAt: t(-1, 7) },
     { projectKey: 'english', title: 'Đăng ký thi thử tại trung tâm', status: 'todo', priority: 'medium', deadline: t(-1, 17), createdAt: t(-8, 12) },
     { projectKey: 'english', title: 'Luyện Speaking Part 2 với bạn', status: 'done', priority: 'medium', createdAt: t(-6, 19), completedAt: t(-2, 21) },
     { projectKey: 'english', title: 'Làm đề Listening Test 1', status: 'done', priority: 'medium', deadline: t(-4, 21), createdAt: t(-9, 19), completedAt: t(-4, 21) },
@@ -94,14 +94,14 @@ export function buildSeed(now = Date.now()) {
     { projectKey: 'english', title: 'Viết Task 1: biểu đồ đường', status: 'done', priority: 'medium', createdAt: t(-12, 20), completedAt: t(-11, 22) },
 
     // Việc cá nhân
-    { projectKey: 'life', title: 'Mua quà sinh nhật cho mẹ', description: 'Mẹ thích khăn lụa hoặc một chậu lan.', status: 'todo', priority: 'high', deadline: t(3, 12), createdAt: t(-4, 21) },
-    { projectKey: 'life', title: 'Gia hạn bảo hiểm xe máy', status: 'todo', priority: 'medium', deadline: t(0, 17), createdAt: t(-6, 8) },
+    { projectKey: 'life', title: 'Mua quà sinh nhật cho mẹ', tags: ['gia đình'], description: 'Mẹ thích khăn lụa hoặc một chậu lan.', status: 'todo', priority: 'high', deadline: t(3, 12), createdAt: t(-4, 21) },
+    { projectKey: 'life', title: 'Gia hạn bảo hiểm xe máy', tags: ['giấy tờ'], status: 'todo', priority: 'medium', deadline: t(0, 17), createdAt: t(-6, 8) },
     { projectKey: 'life', title: 'Dọn phòng và sắp xếp lại dây cáp', status: 'todo', priority: 'low', createdAt: t(-3, 22) },
     { projectKey: 'life', title: 'Đóng tiền internet tháng này', status: 'done', priority: 'medium', deadline: t(-2, 17), createdAt: t(-5, 9), completedAt: t(-2, 9) },
     { projectKey: 'life', title: 'Làm lại căn cước công dân', status: 'done', priority: 'high', createdAt: t(-15, 8), completedAt: t(-10, 10) },
 
     // Sức khoẻ
-    { projectKey: 'health', title: 'Chạy 5km công viên Gia Định', status: 'todo', priority: 'medium', deadline: t(1, 6), createdAt: t(-1, 20) },
+    { projectKey: 'health', title: 'Chạy 5km công viên Gia Định', tags: ['chạy bộ'], status: 'todo', priority: 'medium', deadline: t(1, 6), createdAt: t(-1, 20) },
     { projectKey: 'health', title: 'Đặt lịch khám sức khoẻ định kỳ', status: 'todo', priority: 'medium', deadline: t(7, 9), createdAt: t(-5, 12) },
     { projectKey: 'health', title: 'Tập gym: lưng và vai', status: 'done', priority: 'low', createdAt: t(-2, 17), completedAt: t(0, 7) },
     { projectKey: 'health', title: 'Ngủ trước 23h cả tuần', status: 'done', priority: 'low', createdAt: t(-8, 22), completedAt: t(-1, 23) },

@@ -1,5 +1,5 @@
 // Logic thuần (không đụng DB) để dựng truy vấn danh sách task và lọc dữ liệu đầu vào.
-import { PRIORITIES, STATUSES } from '../models/Task.js';
+import { MAX_TAG_LENGTH, MAX_TAGS, PRIORITIES, STATUSES } from '../models/Task.js';
 import { dueRange } from '../lib/time.js';
 
 // Việc đã xong luôn "chìm" xuống cuối, trừ chế độ board (sắp theo cột rồi theo thứ tự kéo thả)
@@ -9,6 +9,8 @@ const SORTS = {
   oldest: { isDone: 1, createdAt: 1 },
   deadline: { isDone: 1, hasDeadline: -1, deadline: 1, priorityRank: -1 },
   priority: { isDone: 1, priorityRank: -1, hasDeadline: -1, deadline: 1 },
+  updated: { isDone: 1, updatedAt: -1 },
+  title: { isDone: 1, title: 1 },
 };
 
 export const SORT_KEYS = Object.keys(SORTS);
@@ -21,15 +23,16 @@ function escapeRegex(text) {
  * Dựng pipeline aggregate từ query string.
  *  project:  id dự án
  *  status:   todo | doing | done | open (chưa xong) | overdue
- *  priority: low | medium | high | urgent
+ *  priority: low | medium | high | urgent, có thể nhiều giá trị cách nhau dấu phẩy (high,urgent)
  *  due:      today | week | overdue | none (theo múi giờ tzOffset)
- *  search:   tìm theo tên hoặc mô tả
- *  sort:     board | newest | oldest | deadline | priority
+ *  tag:      một nhãn (không phân biệt hoa thường)
+ *  search:   tìm theo tên, mô tả hoặc nhãn
+ *  sort:     board | newest | oldest | deadline | priority | updated | title
  */
 export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffset = 0, toId = (v) => v } = {}) {
   // Luôn giới hạn trong dữ liệu của người đang đăng nhập
   const match = owner ? { owner } : {};
-  const { project, status, priority, due, search, sort } = query;
+  const { project, status, priority, due, search, sort, tag } = query;
 
   if (project) match.project = toId(project);
 
@@ -42,7 +45,15 @@ export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffse
     match.status = status;
   }
 
-  if (PRIORITIES.includes(priority)) match.priority = priority;
+  if (typeof priority === 'string') {
+    const list = [...new Set(priority.split(','))].filter((p) => PRIORITIES.includes(p));
+    if (list.length === 1) match.priority = list[0];
+    else if (list.length > 1) match.priority = { $in: list };
+  }
+
+  if (typeof tag === 'string' && tag.trim()) {
+    match.tags = { $regex: `^${escapeRegex(tag.trim().slice(0, MAX_TAG_LENGTH))}$`, $options: 'i' };
+  }
 
   if (due === 'none') {
     match.deadline = null;
@@ -56,7 +67,7 @@ export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffse
 
   if (typeof search === 'string' && search.trim()) {
     const regex = new RegExp(escapeRegex(search.trim().slice(0, 100)), 'i');
-    match.$or = [{ title: regex }, { description: regex }];
+    match.$or = [{ title: regex }, { description: regex }, { tags: regex }];
   }
 
   return [
@@ -74,7 +85,7 @@ export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffse
   ];
 }
 
-const EDITABLE = ['title', 'description', 'status', 'priority', 'deadline', 'project', 'checklist'];
+const EDITABLE = ['title', 'description', 'status', 'priority', 'deadline', 'project', 'checklist', 'tags'];
 
 function badRequest(message) {
   const err = new Error(message);
@@ -82,7 +93,20 @@ function badRequest(message) {
   return err;
 }
 
-/** Chỉ giữ lại các trường được phép sửa, chuẩn hoá deadline và checklist. */
+/** Chuẩn hoá nhãn: bỏ khoảng trắng thừa và dấu #, cắt độ dài, bỏ trùng (không phân biệt hoa thường). */
+export function normalizeTags(value) {
+  if (!Array.isArray(value)) throw badRequest('Nhãn phải là một mảng');
+  const seen = new Map();
+  for (const raw of value) {
+    if (typeof raw !== 'string') continue;
+    const tag = raw.replace(/^#+/, '').trim().replace(/\s+/g, ' ').slice(0, MAX_TAG_LENGTH).trim();
+    if (tag && !seen.has(tag.toLowerCase())) seen.set(tag.toLowerCase(), tag);
+  }
+  if (seen.size > MAX_TAGS) throw badRequest(`Tối đa ${MAX_TAGS} nhãn cho một công việc`);
+  return [...seen.values()];
+}
+
+/** Chỉ giữ lại các trường được phép sửa, chuẩn hoá deadline, checklist và nhãn. */
 export function pickTaskFields(body = {}) {
   const data = {};
   for (const key of EDITABLE) {
@@ -100,6 +124,7 @@ export function pickTaskFields(body = {}) {
       return clean;
     });
   }
+  if ('tags' in data) data.tags = normalizeTags(data.tags);
   return data;
 }
 

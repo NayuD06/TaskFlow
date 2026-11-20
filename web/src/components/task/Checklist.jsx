@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { ProgressBar } from '../ui/Charts.jsx';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
+import { tr } from '../../lib/i18n.js';
 
 /** Checklist con trong task. items: [{ _id?, text, done }], onChange(newItems) */
 export default function Checklist({ items = [], onChange }) {
@@ -38,7 +39,7 @@ export default function Checklist({ items = [], onChange }) {
         </p>
         {done > 0 && (
           <button type="button" onClick={() => setHideDone((v) => !v)} className="text-xs font-medium text-muted hover:text-ink">
-            {hideDone ? 'Hiện mục đã xong' : 'Ẩn mục đã xong'}
+            {hideDone ? tr('Hiện mục đã xong') : tr('Ẩn mục đã xong')}
           </button>
         )}
       </div>
@@ -62,7 +63,7 @@ export default function Checklist({ items = [], onChange }) {
                   checked={item.done}
                   color="var(--success)"
                   onToggle={() => update(index, { done: !item.done })}
-                  label={`${item.done ? 'Bỏ đánh dấu' : 'Đánh dấu'}: ${item.text}`}
+                  label={`${item.done ? tr('Bỏ đánh dấu') : tr('Đánh dấu')}: ${item.text}`}
                 />
                 <input
                   defaultValue={item.text}
@@ -72,14 +73,14 @@ export default function Checklist({ items = [], onChange }) {
                     else if (text !== item.text) update(index, { text });
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                  aria-label="Nội dung mục"
+                  aria-label={tr('Nội dung mục')}
                   className={`min-w-0 flex-1 bg-transparent py-1 text-[13px] outline-none ${item.done ? 'text-muted line-through' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => remove(index)}
                   className="grid size-7 place-items-center rounded-md text-faint opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger max-sm:opacity-100"
-                  aria-label={`Xoá mục: ${item.text}`}
+                  aria-label={tr('Xoá mục: {text}', { text: item.text })}
                 >
                   <X className="size-3.5" />
                 </button>
@@ -111,7 +112,7 @@ export default function Checklist({ items = [], onChange }) {
               onChange([...items, ...lines.map((t) => ({ text: t, done: false }))]);
             }
           }}
-          placeholder="Thêm mục (dán nhiều dòng để thêm nhiều mục)"
+          placeholder={tr('Thêm mục (dán nhiều dòng để thêm nhiều mục)')}
           className="h-9 flex-1 bg-transparent text-[13px] outline-none placeholder:text-faint"
         />
       </div>

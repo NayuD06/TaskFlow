@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { applyAccent } from '../../lib/accent.js';
 import { api, getToken, setToken, setUnauthorizedHandler } from '../../lib/api.js';
 
 const AuthContext = createContext(null);
@@ -55,6 +56,13 @@ export function AuthProvider({ children }) {
     });
     return () => setUnauthorizedHandler(null);
   }, []);
+
+  // Màu nhấn theo tài khoản; khách (trang giới thiệu, đăng nhập) luôn dùng xanh dương
+  const accent = state.user?.accentColor;
+  useEffect(() => {
+    if (state.status === 'authed') applyAccent(accent);
+    else if (state.status === 'guest') applyAccent(null);
+  }, [accent, state.status]);
 
   // Rời tài khoản thì xoá sạch dữ liệu đã cache để người sau không thấy
   useEffect(() => {

@@ -3,10 +3,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { STATUS, STATUSES } from '../../lib/constants.js';
 import { usePersistentState } from '../../lib/theme.js';
+import { sortTasks } from '../task/Filters.jsx';
 import TaskRow from '../task/TaskRow.jsx';
 import QuickAdd from './QuickAdd.jsx';
-
-const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || new Date(b.createdAt) - new Date(a.createdAt);
+import { tr } from '../../lib/i18n.js';
 
 function Section({ status, tasks, projectId, index }) {
   const [folded, setFolded] = usePersistentState(`taskflow-fold-${status}`, status === 'done');
@@ -44,11 +44,21 @@ function Section({ status, tasks, projectId, index }) {
                   <TaskRow key={t._id} task={t} showProject={false} />
                 ))}
               </AnimatePresence>
-              {tasks.length === 0 && <li className="px-3 py-3 text-[13px] text-faint">Chưa có việc nào.</li>}
+              {tasks.length === 0 && (
+                <li className="px-3 py-3 text-[13px] text-faint">
+                  {status === 'done' ? tr('Chưa có việc nào xong. Tick vào vòng tròn để hoàn thành.') : tr('Chưa có việc nào.')}
+                </li>
+              )}
             </ul>
             {status !== 'done' && (
               <div className="px-2 pb-2">
-                <QuickAdd projectId={projectId} status={status} open={adding} onOpenChange={setAdding} label={`Thêm vào ${meta.label.toLowerCase()}`} />
+                <QuickAdd
+                  projectId={projectId}
+                  status={status}
+                  open={adding}
+                  onOpenChange={setAdding}
+                  label={tr('Thêm vào {status}', { status: meta.label.toLowerCase() })}
+                />
               </div>
             )}
           </motion.div>
@@ -58,11 +68,20 @@ function Section({ status, tasks, projectId, index }) {
   );
 }
 
-export default function ListView({ tasks, projectId }) {
+export default function ListView({ tasks, projectId, sort = 'board' }) {
   return (
     <div className="space-y-3">
       {STATUSES.map((s, i) => (
-        <Section key={s} index={i} status={s} projectId={projectId} tasks={tasks.filter((t) => t.status === s).sort(byOrder)} />
+        <Section
+          key={s}
+          index={i}
+          status={s}
+          projectId={projectId}
+          tasks={sortTasks(
+            tasks.filter((t) => t.status === s),
+            sort,
+          )}
+        />
       ))}
     </div>
   );

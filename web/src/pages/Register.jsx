@@ -6,6 +6,7 @@ import { firstName, useAuth } from '../components/auth/AuthContext.jsx';
 import AuthLayout, { Banner } from '../components/auth/AuthLayout.jsx';
 import { PasswordField, PasswordStrength, TextField } from '../components/auth/Fields.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
+import { tr } from '../lib/i18n.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -13,14 +14,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function validate(form) {
   const errors = {};
   const name = form.name.trim();
-  if (name.length < 2) errors.name = 'Tên tối thiểu 2 ký tự';
-  else if (name.length > 50) errors.name = 'Tên tối đa 50 ký tự';
-  if (!form.email.trim()) errors.email = 'Hãy nhập email';
-  else if (!EMAIL_RE.test(form.email.trim())) errors.email = 'Email không hợp lệ';
-  if (form.password.length < 8) errors.password = 'Mật khẩu tối thiểu 8 ký tự';
-  else if (new TextEncoder().encode(form.password).length > 72) errors.password = 'Mật khẩu quá dài (tối đa 72 ký tự)';
-  else if (!/\p{L}/u.test(form.password) || !/\d/.test(form.password)) errors.password = 'Mật khẩu cần có cả chữ và số';
-  if (!errors.password && form.confirm !== form.password) errors.confirm = 'Mật khẩu nhập lại không khớp';
+  if (name.length < 2) errors.name = tr('Tên tối thiểu 2 ký tự');
+  else if (name.length > 50) errors.name = tr('Tên tối đa 50 ký tự');
+  if (!form.email.trim()) errors.email = tr('Hãy nhập email');
+  else if (!EMAIL_RE.test(form.email.trim())) errors.email = tr('Email không hợp lệ');
+  if (form.password.length < 8) errors.password = tr('Mật khẩu tối thiểu 8 ký tự');
+  else if (new TextEncoder().encode(form.password).length > 72) errors.password = tr('Mật khẩu quá dài (tối đa 72 ký tự)');
+  else if (!/\p{L}/u.test(form.password) || !/\d/.test(form.password)) errors.password = tr('Mật khẩu cần có cả chữ và số');
+  if (!errors.password && form.confirm !== form.password) errors.confirm = tr('Mật khẩu nhập lại không khớp');
   return errors;
 }
 
@@ -52,27 +53,27 @@ export default function Register() {
     setLoading(true);
     try {
       const user = await register({ name: form.name.trim(), email: form.email.trim(), password: form.password });
-      notify({ tone: 'success', message: `Chào mừng ${firstName(user.name)}! Đã có sẵn một dự án mẫu cho bạn.` });
+      notify({ tone: 'success', message: tr('Chào mừng {name}! Đã có sẵn một dự án mẫu cho bạn.', { name: firstName(user.name) }) });
     } catch (err) {
       setLoading(false);
       shake();
       if (err.fields) setErrors(err.fields);
-      else setBanner(err.status === 0 ? 'Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.' : err.message);
+      else setBanner(err.status === 0 ? tr('Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.') : err.message);
     }
   };
 
   return (
     <AuthLayout
-      title="Tạo tài khoản"
-      subtitle="Miễn phí, chỉ mất chưa tới một phút."
+      title={tr('Tạo tài khoản')}
+      subtitle={tr('Miễn phí, chỉ mất chưa tới một phút.')}
       footer={
         <>
-          Đã có tài khoản?{' '}
+          {tr('Đã có tài khoản?')}{' '}
           <Link
             to={`/login${params.get('next') ? `?next=${encodeURIComponent(params.get('next'))}` : ''}`}
             className="font-semibold text-accent-hi hover:underline"
           >
-            Đăng nhập
+            {tr('Đăng nhập')}
           </Link>
         </>
       }
@@ -81,9 +82,9 @@ export default function Register() {
 
       <form ref={scope} onSubmit={submit} noValidate className="space-y-4">
         <TextField
-          label="Họ và tên"
+          label={tr('Họ và tên')}
           autoComplete="name"
-          placeholder="Nguyễn Văn A"
+          placeholder={tr('Nguyễn Văn A')}
           maxLength={50}
           value={form.name}
           onChange={set('name')}
@@ -100,13 +101,13 @@ export default function Register() {
           onChange={set('email')}
           error={errors.email}
         />
-        <PasswordField autoComplete="new-password" placeholder="Tạo mật khẩu" value={form.password} onChange={set('password')} error={errors.password}>
+        <PasswordField autoComplete="new-password" placeholder={tr('Tạo mật khẩu')} value={form.password} onChange={set('password')} error={errors.password}>
           <PasswordStrength password={form.password} />
         </PasswordField>
         <PasswordField
-          label="Nhập lại mật khẩu"
+          label={tr('Nhập lại mật khẩu')}
           autoComplete="new-password"
-          placeholder="Nhập lại mật khẩu"
+          placeholder={tr('Nhập lại mật khẩu')}
           value={form.confirm}
           onChange={set('confirm')}
           error={errors.confirm}
@@ -120,13 +121,13 @@ export default function Register() {
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              Tạo tài khoản <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              {tr('Tạo tài khoản')} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </>
           )}
         </button>
         <p className="flex items-start gap-2 text-xs leading-relaxed text-faint">
           <ShieldCheck className="mt-px size-4 shrink-0 text-success" aria-hidden="true" />
-          Mật khẩu được mã hoá một chiều (bcrypt) trước khi lưu, không ai đọc được kể cả quản trị viên.
+          {tr('Mật khẩu được mã hoá một chiều (bcrypt) trước khi lưu, không ai đọc được kể cả quản trị viên.')}
         </p>
       </form>
     </AuthLayout>

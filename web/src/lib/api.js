@@ -1,3 +1,4 @@
+import { tr } from './i18n.js';
 export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
 
 export class ApiError extends Error {
@@ -51,7 +52,7 @@ async function request(path, { method = 'GET', body, query, signal } = {}) {
     res = await fetch(url, { method, signal, headers, body: body ? JSON.stringify(body) : undefined });
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    throw new ApiError('Không kết nối được tới máy chủ', { status: 0 });
+    throw new ApiError(tr('Không kết nối được tới máy chủ'), { status: 0 });
   }
 
   const payload = await res.json().catch(() => ({}));
@@ -60,9 +61,11 @@ async function request(path, { method = 'GET', body, query, signal } = {}) {
     if (res.status === 401 && token && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
       onUnauthorized?.(payload?.error?.message);
     }
-    throw new ApiError(payload?.error?.message || `Lỗi ${res.status}`, {
+    // Máy chủ trả lời bằng tiếng Việt; dịch lại nếu đang dùng tiếng Anh
+    const fields = payload?.error?.fields;
+    throw new ApiError(tr(payload?.error?.message) || tr('Lỗi {status}', { status: res.status }), {
       status: res.status,
-      fields: payload?.error?.fields,
+      fields: fields && Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, tr(v)])),
     });
   }
   return payload.data;
@@ -89,6 +92,7 @@ export const api = {
   },
   tasks: {
     list: (query = {}) => request('/tasks', { query: { tzOffset: tz(), ...query } }),
+    tags: () => request('/tasks/tags'),
     get: (id) => request(`/tasks/${id}`),
     create: (data) => request('/tasks', { method: 'POST', body: data }),
     update: (id, data) => request(`/tasks/${id}`, { method: 'PATCH', body: data }),

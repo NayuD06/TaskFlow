@@ -6,6 +6,7 @@ import { firstName, useAuth } from '../components/auth/AuthContext.jsx';
 import AuthLayout, { Banner } from '../components/auth/AuthLayout.jsx';
 import { PasswordField, TextField } from '../components/auth/Fields.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
+import { tr } from '../lib/i18n.js';
 
 const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL;
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
@@ -17,7 +18,7 @@ export default function Login() {
   const [params] = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
-  const [banner, setBanner] = useState(reason === 'expired' ? { tone: 'warning', text: 'Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.' } : null);
+  const [banner, setBanner] = useState(reason === 'expired' ? { tone: 'warning', text: tr('Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.') } : null);
   const [loading, setLoading] = useState(null);
   const [scope, animate] = useAnimate();
   const shake = () => animate(scope.current, { x: [0, -10, 10, -6, 6, -2, 0] }, { duration: 0.45 });
@@ -32,12 +33,12 @@ export default function Login() {
     setBanner(null);
     try {
       const user = await login(email, password);
-      notify({ tone: 'success', message: `Chào mừng trở lại, ${firstName(user.name)}!` });
+      notify({ tone: 'success', message: tr('Chào mừng trở lại, {name}!', { name: firstName(user.name) }) });
     } catch (err) {
       setLoading(null);
       shake();
       if (err.fields && err.status === 400) setErrors(err.fields);
-      else setBanner({ tone: 'danger', text: err.status === 0 ? 'Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.' : err.message });
+      else setBanner({ tone: 'danger', text: err.status === 0 ? tr('Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.') : err.message });
     }
   };
 
@@ -45,9 +46,9 @@ export default function Login() {
     e.preventDefault();
     const email = form.email.trim();
     const next = {};
-    if (!email) next.email = 'Hãy nhập email';
-    else if (!EMAIL_RE.test(email)) next.email = 'Email không hợp lệ';
-    if (!form.password) next.password = 'Hãy nhập mật khẩu';
+    if (!email) next.email = tr('Hãy nhập email');
+    else if (!EMAIL_RE.test(email)) next.email = tr('Email không hợp lệ');
+    if (!form.password) next.password = tr('Hãy nhập mật khẩu');
     setErrors(next);
     if (Object.keys(next).length) {
       shake();
@@ -58,16 +59,16 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title="Đăng nhập"
-      subtitle="Chào bạn quay lại! Đăng nhập để tiếp tục công việc."
+      title={tr('Đăng nhập')}
+      subtitle={tr('Chào bạn quay lại! Đăng nhập để tiếp tục công việc.')}
       footer={
         <>
-          Chưa có tài khoản?{' '}
+          {tr('Chưa có tài khoản?')}{' '}
           <Link
             to={`/register${params.get('next') ? `?next=${encodeURIComponent(params.get('next'))}` : ''}`}
             className="font-semibold text-accent-hi hover:underline"
           >
-            Đăng ký miễn phí
+            {tr('Đăng ký miễn phí')}
           </Link>
         </>
       }
@@ -86,7 +87,13 @@ export default function Login() {
           error={errors.email}
           autoFocus
         />
-        <PasswordField autoComplete="current-password" placeholder="Nhập mật khẩu" value={form.password} onChange={set('password')} error={errors.password} />
+        <PasswordField
+          autoComplete="current-password"
+          placeholder={tr('Nhập mật khẩu')}
+          value={form.password}
+          onChange={set('password')}
+          error={errors.password}
+        />
         <button
           type="submit"
           disabled={!!loading}
@@ -96,7 +103,7 @@ export default function Login() {
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              Đăng nhập <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              {tr('Đăng nhập')} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </>
           )}
         </button>
@@ -105,7 +112,7 @@ export default function Login() {
       {DEMO_EMAIL && DEMO_PASSWORD && (
         <>
           <div className="my-5 flex items-center gap-3 text-xs text-faint">
-            <span className="h-px flex-1 bg-line" /> hoặc <span className="h-px flex-1 bg-line" />
+            <span className="h-px flex-1 bg-line" /> {tr('hoặc')} <span className="h-px flex-1 bg-line" />
           </div>
           <button
             type="button"
@@ -118,9 +125,9 @@ export default function Login() {
             ) : (
               <Sparkles className="size-4 text-accent-hi" aria-hidden="true" />
             )}
-            Dùng thử bằng tài khoản demo
+            {tr('Dùng thử bằng tài khoản demo')}
           </button>
-          <p className="mt-2 text-center text-xs text-faint">Tài khoản demo dùng chung, dữ liệu có thể bị người khác thay đổi.</p>
+          <p className="mt-2 text-center text-xs text-faint">{tr('Tài khoản demo dùng chung, dữ liệu có thể bị người khác thay đổi.')}</p>
         </>
       )}
     </AuthLayout>

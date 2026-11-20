@@ -11,11 +11,13 @@ import Segmented from '../ui/Segmented.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import { useUI } from '../shell/UIContext.jsx';
 import Checklist from './Checklist.jsx';
+import TagInput from './TagInput.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const QUICK = [
-  { kind: 'today', label: 'Hôm nay' },
-  { kind: 'tomorrow', label: 'Ngày mai' },
-  { kind: 'nextWeek', label: 'Thứ Hai tới' },
+  { kind: 'today', label: tr('Hôm nay') },
+  { kind: 'tomorrow', label: tr('Ngày mai') },
+  { kind: 'nextWeek', label: tr('Thứ Hai tới') },
 ];
 
 function Row({ label, children }) {
@@ -55,6 +57,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
     deadline: task?.deadline ?? defaults?.deadline ?? null,
     project: task?.project?._id ?? defaults?.project ?? '',
     checklist: task?.checklist ?? [],
+    tags: task?.tags ?? defaults?.tags ?? [],
   }));
   const [error, setError] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
@@ -62,8 +65,15 @@ function SheetBody({ task, mode, defaults, onClose }) {
   // Đồng bộ khi dữ liệu server đổi (vd đánh dấu xong ở chỗ khác)
   useEffect(() => {
     if (!task || creating) return;
-    setForm((f) => ({ ...f, status: task.status, checklist: task.checklist ?? f.checklist, priority: task.priority, deadline: task.deadline }));
-  }, [task?.status, task?.checklist, task?.priority, task?.deadline]); // eslint-disable-line react-hooks/exhaustive-deps
+    setForm((f) => ({
+      ...f,
+      status: task.status,
+      checklist: task.checklist ?? f.checklist,
+      priority: task.priority,
+      deadline: task.deadline,
+      tags: task.tags ?? f.tags,
+    }));
+  }, [task?.status, task?.checklist, task?.priority, task?.deadline, task?.tags]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (creating && !form.project && projects.length) setForm((f) => ({ ...f, project: projects[0]._id }));
@@ -83,17 +93,17 @@ function SheetBody({ task, mode, defaults, onClose }) {
 
   const submit = async () => {
     if (!form.title.trim()) {
-      setError('Hãy đặt tên cho công việc');
+      setError(tr('Hãy đặt tên cho công việc'));
       return;
     }
     if (!form.project) {
-      setError('Hãy chọn hoặc tạo một dự án trước');
+      setError(tr('Hãy chọn hoặc tạo một dự án trước'));
       return;
     }
     setError(null);
     try {
       await create.mutateAsync({ ...form, title: form.title.trim(), description: form.description.trim() });
-      notify({ tone: 'success', message: 'Đã thêm công việc' });
+      notify({ tone: 'success', message: tr('Đã thêm công việc') });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -106,13 +116,14 @@ function SheetBody({ task, mode, defaults, onClose }) {
     remove.mutate(snapshot, {
       onSuccess: () =>
         notify({
-          message: `Đã xoá “${snapshot.title}”`,
+          message: tr('Đã xoá “{title}”', { title: snapshot.title }),
           action: {
-            label: 'Hoàn tác',
+            label: tr('Hoàn tác'),
             onClick: async () => {
-              const { title, description, status, priority, deadline, checklist } = snapshot;
+              const { title, description, status, priority, deadline, checklist, tags } = snapshot;
               try {
-                await api.tasks.create({ title, description, status, priority, deadline, checklist, project: snapshot.project?._id });
+                await api.tasks.create({ title, description, status, priority, deadline, checklist, tags, project: snapshot.project?._id });
+                notify({ tone: 'success', message: tr('Đã khôi phục công việc') });
               } catch (err) {
                 notify({ tone: 'error', message: err.message });
               }
@@ -132,7 +143,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
       <div className="flex items-center gap-2 border-b border-line px-5 py-3">
         <span className="flex min-w-0 flex-1 items-center gap-2 text-[13px] text-muted" style={hueStyle(project?.color)}>
           <span className="hue-dot size-2.5 shrink-0 rounded-full" />
-          <span className="truncate">{creating ? 'Công việc mới' : project?.name}</span>
+          <span className="truncate">{creating ? tr('Công việc mới') : project?.name}</span>
         </span>
         <AnimatePresence>
           {savedAt && !creating && (
@@ -143,18 +154,18 @@ function SheetBody({ task, mode, defaults, onClose }) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-1 text-xs text-success"
             >
-              <Check className="size-3.5" /> Đã lưu
+              <Check className="size-3.5" /> {tr('Đã lưu')}
             </motion.span>
           )}
         </AnimatePresence>
         {!creating && (
-          <Menu trigger={<MoreHorizontal className="size-4" />} items={[{ label: 'Xoá công việc', icon: Trash2, danger: true, onClick: handleDelete }]} />
+          <Menu trigger={<MoreHorizontal className="size-4" />} items={[{ label: tr('Xoá công việc'), icon: Trash2, danger: true, onClick: handleDelete }]} />
         )}
         <button
           type="button"
           onClick={onClose}
           className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink"
-          aria-label="Đóng"
+          aria-label={tr('Đóng')}
         >
           <X className="size-4" />
         </button>
@@ -174,25 +185,25 @@ function SheetBody({ task, mode, defaults, onClose }) {
           }}
           autoFocus={creating}
           maxLength={120}
-          placeholder="Tên công việc"
-          aria-label="Tên công việc"
+          placeholder={tr('Tên công việc')}
+          aria-label={tr('Tên công việc')}
           className={`w-full resize-none bg-transparent font-display text-lg leading-snug font-bold outline-none placeholder:text-faint ${
             done ? 'text-muted line-through decoration-2' : ''
           }`}
         />
 
         <div className="mt-3 divide-y divide-line/60">
-          <Row label="Trạng thái">
+          <Row label={tr('Trạng thái')}>
             <Segmented
               size="sm"
-              label="Trạng thái"
+              label={tr('Trạng thái')}
               value={form.status}
               onChange={(status) => save({ status })}
               options={STATUSES.map((s) => ({ value: s, label: STATUS[s].label }))}
             />
           </Row>
 
-          <Row label="Ưu tiên">
+          <Row label={tr('Ưu tiên')}>
             <div className="flex flex-wrap gap-1.5">
               {PRIORITIES.map((p) => {
                 const active = form.priority === p;
@@ -214,9 +225,10 @@ function SheetBody({ task, mode, defaults, onClose }) {
             </div>
           </Row>
 
-          <Row label="Hạn chót">
+          <Row label={tr('Hạn chót')}>
             <input
               type="datetime-local"
+              aria-label={tr('Hạn chót')}
               value={toInputValue(form.deadline)}
               onChange={(e) => save({ deadline: fromInputValue(e.target.value) })}
               className="h-9 w-full max-w-60 rounded-lg border border-line bg-surface-2 px-2.5 text-[13px] outline-none focus:border-accent"
@@ -238,19 +250,24 @@ function SheetBody({ task, mode, defaults, onClose }) {
                   onClick={() => save({ deadline: null })}
                   className="rounded-lg px-2.5 py-1 text-xs font-medium text-faint hover:text-danger"
                 >
-                  Bỏ hạn
+                  {tr('Bỏ hạn')}
                 </button>
               )}
             </div>
           </Row>
 
-          <Row label="Dự án">
+          <Row label={tr('Nhãn')}>
+            <TagInput value={form.tags} onChange={(tags) => save({ tags })} />
+          </Row>
+
+          <Row label={tr('Dự án|một')}>
             <select
               value={form.project}
+              aria-label={tr('Dự án|một')}
               onChange={(e) => save({ project: e.target.value })}
               className="h-9 w-full max-w-60 rounded-lg border border-line bg-surface-2 px-2.5 text-[13px] outline-none focus:border-accent"
             >
-              {projects.length === 0 && <option value="">Chưa có dự án</option>}
+              {projects.length === 0 && <option value="">{tr('Chưa có dự án')}</option>}
               {projects.map((p) => (
                 <option key={p._id} value={p._id}>
                   {p.name}
@@ -262,7 +279,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
 
         <div className="mt-4">
           <label htmlFor="sheet-desc" className="text-[13px] font-semibold">
-            Mô tả
+            {tr('Mô tả')}
           </label>
           <AutoTextarea
             id="sheet-desc"
@@ -270,7 +287,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             onBlur={() => !creating && form.description !== (task.description || '') && save({ description: form.description })}
             maxLength={2000}
-            placeholder="Thêm ghi chú, đường dẫn, ý tưởng…"
+            placeholder={tr('Thêm ghi chú, đường dẫn, ý tưởng…')}
             className="mt-1.5 min-h-20 w-full resize-none rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-[13px] leading-relaxed outline-none placeholder:text-faint focus:border-accent"
           />
         </div>
@@ -294,9 +311,9 @@ function SheetBody({ task, mode, defaults, onClose }) {
       <div className="flex items-center gap-3 border-t border-line px-5 py-3">
         {creating ? (
           <>
-            <span className="flex-1 text-xs text-faint">Enter để tạo nhanh</span>
+            <span className="flex-1 text-xs text-faint">{tr('Enter để tạo nhanh')}</span>
             <button type="button" onClick={onClose} className="h-10 rounded-xl px-4 font-semibold text-muted hover:bg-surface-2 hover:text-ink">
-              Huỷ
+              {tr('Huỷ')}
             </button>
             <button
               type="button"
@@ -305,24 +322,24 @@ function SheetBody({ task, mode, defaults, onClose }) {
               className="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 font-semibold text-white hover:brightness-110 disabled:opacity-60"
             >
               {create.isPending && <LoaderCircle className="size-4 animate-spin" />}
-              Tạo công việc
+              {tr('Tạo công việc')}
             </button>
           </>
         ) : (
           <>
             <span className="flex-1 text-xs text-faint">
-              Tạo {relativeTime(task.createdAt)}
-              {task.completedAt && done && ` · xong lúc ${formatTime(task.completedAt)} ${shortDate(new Date(task.completedAt))}`}
+              {tr('Tạo {time}', { time: relativeTime(task.createdAt) })}
+              {task.completedAt && done && tr(' · xong lúc {time} {date}', { time: formatTime(task.completedAt), date: shortDate(new Date(task.completedAt)) })}
             </span>
             <button
               type="button"
               onClick={() => save({ status: done ? 'todo' : 'done' })}
               className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 font-semibold ${
-                done ? 'bg-surface-2 text-ink hover:bg-surface-3' : 'bg-success text-white hover:brightness-110'
+                done ? 'bg-surface-2 text-ink hover:bg-surface-3' : 'bg-success-solid text-white hover:brightness-110'
               }`}
             >
               {done ? <RotateCcw className="size-4" /> : <Check className="size-4" />}
-              {done ? 'Mở lại' : 'Đánh dấu xong'}
+              {done ? tr('Mở lại') : tr('Đánh dấu xong')}
             </button>
           </>
         )}
@@ -350,10 +367,10 @@ export default function TaskSheet() {
       {sheet && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <motion.div className="absolute inset-0 bg-black/45" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeSheet} />
-          <motion.aside
+          <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label={sheet.mode === 'create' ? 'Tạo công việc' : 'Chi tiết công việc'}
+            aria-label={sheet.mode === 'create' ? tr('Tạo công việc') : tr('Chi tiết công việc')}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -364,10 +381,10 @@ export default function TaskSheet() {
               <SheetBody key={sheet.mode === 'create' ? 'new' : sheet.id} task={task} mode={sheet.mode} defaults={sheet.defaults} onClose={closeSheet} />
             ) : (
               <div className="grid flex-1 place-items-center text-muted">
-                {isError ? 'Không tìm thấy công việc này.' : <LoaderCircle className="size-6 animate-spin" />}
+                {isError ? tr('Không tìm thấy công việc này.') : <LoaderCircle className="size-6 animate-spin" />}
               </div>
             )}
-          </motion.aside>
+          </motion.div>
         </div>
       )}
     </AnimatePresence>

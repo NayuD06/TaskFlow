@@ -8,6 +8,7 @@ import { Dialog } from '../ui/Overlay.jsx';
 import { ProjectTile } from '../ui/Pills.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import { useUI } from '../shell/UIContext.jsx';
+import { tr } from '../../lib/i18n.js';
 
 export default function ProjectDialog() {
   const { projectDialog, closeProjectDialog } = useUI();
@@ -31,12 +32,12 @@ export default function ProjectDialog() {
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
-      setError('Hãy đặt tên cho dự án');
+      setError(tr('Hãy đặt tên cho dự án'));
       return;
     }
     try {
       const project = await save.mutateAsync({ id: editing?._id, data: { ...form, name: form.name.trim() } });
-      notify({ tone: 'success', message: editing ? 'Đã lưu dự án' : `Đã tạo dự án “${project.name}”` });
+      notify({ tone: 'success', message: editing ? tr('Đã lưu dự án') : tr('Đã tạo dự án “{name}”', { name: project.name }) });
       closeProjectDialog();
       if (!editing) navigate(`/projects/${project._id}`);
     } catch (err) {
@@ -53,14 +54,14 @@ export default function ProjectDialog() {
           </motion.div>
           <div>
             <h2 id="project-dialog-title" className="font-display text-base font-bold">
-              {editing ? 'Sửa dự án' : 'Dự án mới'}
+              {editing ? tr('Sửa dự án') : tr('Dự án mới')}
             </h2>
-            <p className="text-[13px] text-muted">Mỗi dự án có một màu riêng để dễ nhận ra.</p>
+            <p className="text-[13px] text-muted">{tr('Mỗi dự án có một màu riêng để dễ nhận ra.')}</p>
           </div>
         </div>
 
         <label htmlFor="p-name" className="mt-5 block text-[13px] font-semibold">
-          Tên dự án
+          {tr('Tên dự án')}
         </label>
         <input
           id="p-name"
@@ -68,12 +69,12 @@ export default function ProjectDialog() {
           value={form.name}
           maxLength={60}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder="Ví dụ: Đồ án tốt nghiệp"
+          placeholder={tr('Ví dụ: Đồ án tốt nghiệp')}
           className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface-2 px-3 outline-none placeholder:text-faint focus:border-accent"
         />
 
         <label htmlFor="p-desc" className="mt-4 block text-[13px] font-semibold">
-          Mô tả <span className="font-normal text-muted">(không bắt buộc)</span>
+          {tr('Mô tả')} <span className="font-normal text-muted">{tr('(không bắt buộc)')}</span>
         </label>
         <textarea
           id="p-desc"
@@ -85,7 +86,7 @@ export default function ProjectDialog() {
         />
 
         <fieldset className="mt-4">
-          <legend className="text-[13px] font-semibold">Màu</legend>
+          <legend className="text-[13px] font-semibold">{tr('Màu')}</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {Object.entries(HUES).map(([name, hex]) => {
               const active = form.color === name;
@@ -115,7 +116,7 @@ export default function ProjectDialog() {
 
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" onClick={closeProjectDialog} className="h-10 rounded-xl px-4 font-semibold text-muted hover:bg-surface-2 hover:text-ink">
-            Huỷ
+            {tr('Huỷ')}
           </button>
           <button
             type="submit"
@@ -123,7 +124,7 @@ export default function ProjectDialog() {
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 font-semibold text-white hover:brightness-110 disabled:opacity-60"
           >
             {save.isPending && <LoaderCircle className="size-4 animate-spin" />}
-            {editing ? 'Lưu thay đổi' : 'Tạo dự án'}
+            {editing ? tr('Lưu thay đổi') : tr('Tạo dự án')}
           </button>
         </div>
       </form>

@@ -39,6 +39,15 @@ Nếu bạn đã seed Atlas và đưa code lên GitHub **trước khi có tính 
 
 Sau đó kiểm tra theo Bước 6.
 
+### Cập nhật bản có nhãn, song ngữ, PWA (tháng 11/2026)
+
+Bản này **không cần thêm biến môi trường nào** và **không có thư viện mới**, chỉ cần đẩy code lên:
+
+1. `git add .` → `git commit -m "..."` → `git push`. Render và Vercel tự deploy lại.
+2. Dữ liệu cũ vẫn dùng bình thường: công việc cũ chưa có nhãn, người dùng cũ dùng ảnh chữ cái và màu nhấn xanh dương như trước.
+3. (Không bắt buộc) Muốn tài khoản demo có sẵn nhãn mẫu thì seed lại theo bước 1.5. **Lưu ý**: seed xoá luôn mọi tài khoản người khác đã đăng ký.
+4. Sau khi deploy, nếu trình duyệt vẫn hiện giao diện cũ thì bấm **Ctrl + Shift + R** (hoặc đóng hẳn tab rồi mở lại) một lần. Web giờ có service worker (PWA) nên trình duyệt có thể giữ bản cũ đến lần mở sau.
+
 ---
 
 ## Bước 0. Chuẩn bị
@@ -287,6 +296,7 @@ Dự án đã có file `render.yaml` mô tả sẵn cấu hình.
 
      - `VITE_API_URL`: không có dấu `/` ở cuối, **không** thêm `/api`.
      - 2 biến `VITE_DEMO_...` làm hiện nút **Dùng thử bằng tài khoản demo** ở trang đăng nhập, để người xem bấm vào là dùng được ngay, khỏi đăng ký. Không thêm thì không có nút đó. Chỉ điền tài khoản demo, **không** điền tài khoản thật vì mọi biến `VITE_` đều bị lộ ra trình duyệt.
+     - Ảnh xem trước khi chia sẻ link (Facebook, Zalo...) tự lấy tên miền production của Vercel, không cần làm gì. Chỉ khi bạn gắn tên miền riêng (vd `taskflow.vn`) thì thêm biến `VITE_SITE_URL` = `https://taskflow.vn` rồi **Redeploy**.
 
 5. Bấm **Deploy**, đợi khoảng 1 phút.
 6. Xong sẽ có địa chỉ dạng `https://taskflow-xxxx.vercel.app` (xem ở mục **Domains** của project). Copy vào Notepad, đây là **địa chỉ web**.
@@ -339,6 +349,7 @@ Xong rồi đó! Gửi địa chỉ Vercel cho bạn bè xem thôi.
 - Sửa code trên máy → `git add .` → `git commit -m "mô tả thay đổi"` → `git push`. Render và Vercel **tự deploy lại** sau vài phút.
 - Đổi `VITE_API_URL` trên Vercel thì phải build lại mới có tác dụng (biến này được gắn vào lúc build): vào **Deployments** → bấm `...` ở bản mới nhất → **Redeploy**.
 - Đổi biến môi trường trên Render thì Render tự khởi động lại.
+- Web có service worker (PWA): sau mỗi lần deploy, lần mở đầu tiên có thể vẫn là bản cũ. Tải lại trang (hoặc **Ctrl + Shift + R**) là thấy bản mới.
 
 ---
 
@@ -368,6 +379,9 @@ Xong rồi đó! Gửi địa chỉ Vercel cho bạn bè xem thôi.
 | Báo "Bạn thử quá nhiều lần. Hãy đợi khoảng 15 phút" | Nhập sai mật khẩu hơn 10 lần trong 15 phút (chống dò mật khẩu) | Đợi 15 phút. Khởi động lại service trên Render cũng xoá bộ đếm |
 | Không thấy nút "Dùng thử bằng tài khoản demo" | Thiếu `VITE_DEMO_EMAIL` hoặc `VITE_DEMO_PASSWORD` trên Vercel | Thêm 2 biến rồi **Redeploy** |
 | Trang Tài khoản không cho đổi mật khẩu, đổi tên | Đang dùng tài khoản demo (bị khoá có chủ ý) | Đăng ký tài khoản riêng |
+| Đã deploy nhưng web vẫn hiện giao diện cũ | Service worker còn giữ bản cũ | Bấm **Ctrl + Shift + R**, hoặc F12 → **Application** → **Service workers** → **Unregister** rồi tải lại |
+| Chia sẻ link lên Facebook không hiện ảnh xem trước | Facebook lưu đệm bản cũ | Dán link vào https://developers.facebook.com/tools/debug → **Scrape Again** |
+| Bật "Báo trước 1 giờ" nhưng không thấy thông báo | Trình duyệt đang chặn thông báo của trang | Bấm biểu tượng ổ khoá cạnh thanh địa chỉ → **Notifications** → **Allow** |
 
 Mẹo: hầu hết lỗi đều thấy được ở 2 chỗ. **Logs** của service trên Render (lỗi phía API, database) và **F12 → Console / Network** trên trình duyệt (lỗi phía web, CORS, sai địa chỉ).
 

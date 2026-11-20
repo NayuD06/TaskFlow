@@ -1,11 +1,13 @@
 import { LoaderCircle, RotateCcw, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
 import { API_URL } from '../../lib/api.js';
-import Landing from '../../pages/Landing.jsx';
 import { LogoMark } from '../shell/Logo.jsx';
 import { useAuth } from './AuthContext.jsx';
+import { tr } from '../../lib/i18n.js';
+
+const Landing = lazy(() => import('../../pages/Landing.jsx'));
 
 /** Chỉ cho phép đường dẫn nội bộ, tránh bị lợi dụng chuyển hướng sang trang lạ. */
 export function safeNext(value) {
@@ -26,11 +28,11 @@ export function Splash() {
           <LogoMark size={56} />
         </motion.div>
         <p className="mt-5 flex items-center gap-2 text-[13px] text-muted">
-          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Đang tải TaskFlow...
+          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> {tr('Đang tải TaskFlow...')}
         </p>
         {slow && (
           <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-2 max-w-xs text-xs leading-relaxed text-faint">
-            Máy chủ miễn phí có thể mất khoảng 30 đến 50 giây để thức dậy ở lần mở đầu tiên, bạn đợi chút nhé.
+            {tr('Máy chủ miễn phí có thể mất khoảng 30 đến 50 giây để thức dậy ở lần mở đầu tiên, bạn đợi chút nhé.')}
           </motion.p>
         )}
       </div>
@@ -46,17 +48,17 @@ function Offline() {
         <div className="tone-danger mx-auto grid size-12 place-items-center rounded-2xl">
           <WifiOff className="size-6" aria-hidden="true" />
         </div>
-        <h1 className="mt-4 font-display text-lg font-bold">Không kết nối được tới máy chủ</h1>
+        <h1 className="mt-4 font-display text-lg font-bold">{tr('Không kết nối được tới máy chủ')}</h1>
         <p className="mt-2 text-[13px] leading-relaxed text-muted">
-          Không gọi được <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">{API_URL}</code>. Có thể máy chủ đang khởi động hoặc mạng của bạn đang
-          chập chờn.
+          {tr('Không gọi được')} <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">{API_URL}</code>
+          {tr('. Có thể máy chủ đang khởi động hoặc mạng của bạn đang chập chờn.')}
         </p>
         <button
           type="button"
           onClick={retry}
           className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-[13px] font-semibold text-white hover:brightness-110"
         >
-          <RotateCcw className="size-4" aria-hidden="true" /> Thử lại
+          <RotateCcw className="size-4" aria-hidden="true" /> {tr('Thử lại')}
         </button>
       </div>
     </div>
@@ -71,7 +73,12 @@ export function RequireAuth({ children }) {
   if (status === 'offline') return <Offline />;
   if (status !== 'authed') {
     // Khách mở trang chủ thì thấy trang giới thiệu, tự đăng xuất thì cũng quay về đó
-    if (location.pathname === '/') return <Landing />;
+    if (location.pathname === '/')
+      return (
+        <Suspense fallback={<Splash />}>
+          <Landing />
+        </Suspense>
+      );
     if (reason === 'logout') return <Navigate to="/" replace />;
     const next = location.pathname + location.search;
     return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;

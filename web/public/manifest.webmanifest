@@ -1,0 +1,21 @@
+{
+  "name": "TaskFlow · Quản lý dự án và công việc",
+  "short_name": "TaskFlow",
+  "description": "Kanban kéo thả, lịch hạn chót, nhắc việc và bể nước tiến độ.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#04060b",
+  "theme_color": "#04060b",
+  "categories": ["productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Việc của tôi", "url": "/my-tasks", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Dự án", "url": "/projects", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

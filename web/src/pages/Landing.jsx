@@ -21,57 +21,72 @@ import HeroDemo from '../components/landing/HeroDemo.jsx';
 import TideSteps from '../components/landing/TideSteps.jsx';
 import { LogoMark } from '../components/shell/Logo.jsx';
 import { EASE_RISE } from '../components/ui/Motion.jsx';
+import LangSwitch from '../components/ui/LangSwitch.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
 import { API_URL } from '../lib/api.js';
 import { useTheme } from '../lib/theme.js';
+import { tr } from '../lib/i18n.js';
 
 const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL;
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
 const HAS_DEMO = Boolean(DEMO_EMAIL && DEMO_PASSWORD);
 
 const NAV = [
-  { id: 'tinh-nang', label: 'Tính năng' },
-  { id: 'cach-dung', label: 'Cách dùng' },
-  { id: 'cau-hoi', label: 'Câu hỏi' },
+  { id: 'tinh-nang', label: tr('Tính năng') },
+  { id: 'cach-dung', label: tr('Cách dùng') },
+  { id: 'cau-hoi', label: tr('Câu hỏi') },
 ];
 
 const TICKER = [
-  'Bảng Kanban kéo thả',
-  'Lịch hạn chót',
-  'Checklist việc con',
-  'Ctrl K tìm nhanh',
-  'Giao diện tối và sáng',
-  'Kéo thả bằng bàn phím',
-  'Hoàn tác khi lỡ xoá',
-  'Biểu đồ nhịp hoàn thành',
-  'Dùng tốt trên điện thoại',
+  tr('Bảng Kanban kéo thả'),
+  tr('Lịch hạn chót'),
+  tr('Checklist việc con'),
+  tr('Ctrl K tìm nhanh'),
+  tr('Giao diện tối và sáng'),
+  tr('Kéo thả bằng bàn phím'),
+  tr('Hoàn tác khi lỡ xoá'),
+  tr('Biểu đồ nhịp hoàn thành'),
+  tr('Dùng tốt trên điện thoại'),
 ];
 
 const FEATURES = [
-  { icon: KanbanSquare, title: 'Bảng Kanban kéo thả', body: 'Ba cột Cần làm, Đang làm, Đã xong. Kéo bằng chuột, chạm trên điện thoại, hoặc dùng bàn phím.' },
-  { icon: CalendarDays, title: 'Lịch hạn chót', body: 'Xem việc theo tháng, kéo sang ngày khác để dời hạn, kéo việc chưa có hạn vào lịch để đặt hạn.' },
-  { icon: Waves, title: 'Bể nước tiến độ', body: 'Mỗi dự án là một bể nước. Xong càng nhiều việc, mực nước càng dâng cao, nhìn là biết còn bao nhiêu.' },
-  { icon: ChartSpline, title: 'Tổng quan trong một trang', body: 'Việc trễ hạn, đến hạn hôm nay, nhịp hoàn thành 14 ngày và tiến độ từng dự án.' },
-  { icon: ListChecks, title: 'Checklist việc con', body: 'Chia việc lớn thành từng bước nhỏ rồi tick dần. Bảng chi tiết tự lưu từng thay đổi.' },
-  { icon: ShieldCheck, title: 'Riêng tư và an toàn', body: 'Mật khẩu mã hoá bằng bcrypt, đăng nhập bằng JWT. Dữ liệu của bạn chỉ mình bạn xem được.' },
+  {
+    icon: KanbanSquare,
+    title: tr('Bảng Kanban kéo thả'),
+    body: tr('Ba cột Cần làm, Đang làm, Đã xong. Kéo bằng chuột, chạm trên điện thoại, hoặc dùng bàn phím.'),
+  },
+  { icon: CalendarDays, title: tr('Lịch hạn chót'), body: tr('Xem việc theo tháng, kéo sang ngày khác để dời hạn, kéo việc chưa có hạn vào lịch để đặt hạn.') },
+  {
+    icon: Waves,
+    title: tr('Bể nước tiến độ'),
+    body: tr('Mỗi dự án là một bể nước. Xong càng nhiều việc, mực nước càng dâng cao, nhìn là biết còn bao nhiêu.'),
+  },
+  { icon: ChartSpline, title: tr('Tổng quan trong một trang'), body: tr('Việc trễ hạn, đến hạn hôm nay, nhịp hoàn thành 14 ngày và tiến độ từng dự án.') },
+  { icon: ListChecks, title: tr('Checklist việc con'), body: tr('Chia việc lớn thành từng bước nhỏ rồi tick dần. Bảng chi tiết tự lưu từng thay đổi.') },
+  { icon: ShieldCheck, title: tr('Riêng tư và an toàn'), body: tr('Mật khẩu mã hoá bằng bcrypt, đăng nhập bằng JWT. Dữ liệu của bạn chỉ mình bạn xem được.') },
 ];
 
 const FAQ = [
-  { q: 'TaskFlow có mất phí không?', a: 'Không. TaskFlow miễn phí, bạn chỉ cần một email để tạo tài khoản.' },
+  { q: tr('TaskFlow có mất phí không?'), a: tr('Không. TaskFlow miễn phí, bạn chỉ cần một email để tạo tài khoản.') },
   {
-    q: 'Dữ liệu của tôi có an toàn không?',
-    a: 'Mật khẩu được mã hoá một chiều bằng bcrypt trước khi lưu, nên kể cả người quản trị cũng không đọc được. Mỗi tài khoản chỉ xem và sửa được dữ liệu của chính mình.',
+    q: tr('Dữ liệu của tôi có an toàn không?'),
+    a: tr(
+      'Mật khẩu được mã hoá một chiều bằng bcrypt trước khi lưu, nên kể cả người quản trị cũng không đọc được. Mỗi tài khoản chỉ xem và sửa được dữ liệu của chính mình.',
+    ),
   },
   HAS_DEMO && {
-    q: 'Tài khoản demo là gì?',
-    a: 'Là tài khoản dùng chung có sẵn dữ liệu mẫu để bạn xem thử trước khi đăng ký. Vì ai cũng vào được nên đừng lưu thông tin riêng ở đó.',
+    q: tr('Tài khoản demo là gì?'),
+    a: tr('Là tài khoản dùng chung có sẵn dữ liệu mẫu để bạn xem thử trước khi đăng ký. Vì ai cũng vào được nên đừng lưu thông tin riêng ở đó.'),
   },
-  { q: 'Dùng trên điện thoại được không?', a: 'Được. Giao diện tự co giãn theo màn hình, bảng Kanban kéo thả được bằng cảm ứng.' },
+  { q: tr('Dùng trên điện thoại được không?'), a: tr('Được. Giao diện tự co giãn theo màn hình, bảng Kanban kéo thả được bằng cảm ứng.') },
   {
-    q: 'Sao lần đầu mở hơi lâu?',
-    a: 'Máy chủ miễn phí sẽ ngủ khi không có ai dùng. Lần mở đầu tiên có thể mất 30 đến 50 giây để máy chủ thức dậy, sau đó sẽ nhanh bình thường.',
+    q: tr('Sao lần đầu mở hơi lâu?'),
+    a: tr('Máy chủ miễn phí sẽ ngủ khi không có ai dùng. Lần mở đầu tiên có thể mất 30 đến 50 giây để máy chủ thức dậy, sau đó sẽ nhanh bình thường.'),
   },
-  { q: 'Tôi có xoá tài khoản được không?', a: 'Được. Vào trang Tài khoản, chọn Xoá tài khoản. Toàn bộ dự án và công việc của bạn sẽ bị xoá vĩnh viễn.' },
+  {
+    q: tr('Tôi có xoá tài khoản được không?'),
+    a: tr('Được. Vào trang Tài khoản, chọn Xoá tài khoản. Toàn bộ dự án và công việc của bạn sẽ bị xoá vĩnh viễn.'),
+  },
 ].filter(Boolean);
 
 const BOTTOM_WAVE = `M0 40 Q 60 22 120 40 ${Array.from({ length: 23 }, (_, i) => `T ${240 + i * 120} 40`).join(' ')} V 96 H 0 Z`;
@@ -96,10 +111,10 @@ function useDemoLogin() {
     setLoading(true);
     try {
       const user = await login(DEMO_EMAIL, DEMO_PASSWORD);
-      notify({ tone: 'success', message: `Chào mừng, ${firstName(user.name)}! Đây là dữ liệu mẫu để bạn xem thử.` });
+      notify({ tone: 'success', message: tr('Chào mừng, {name}! Đây là dữ liệu mẫu để bạn xem thử.', { name: firstName(user.name) }) });
     } catch (err) {
       setLoading(false);
-      notify({ tone: 'error', message: err.status === 0 ? 'Máy chủ đang khởi động, bạn thử lại sau ít giây nhé.' : err.message });
+      notify({ tone: 'error', message: err.status === 0 ? tr('Máy chủ đang khởi động, bạn thử lại sau ít giây nhé.') : err.message });
     }
   };
   return { run, loading };
@@ -124,14 +139,14 @@ function SecondaryAction({ demo, className = '' }) {
   if (!HAS_DEMO) {
     return (
       <Link to="/login" className={base}>
-        Đăng nhập
+        {tr('Đăng nhập')}
       </Link>
     );
   }
   return (
     <button type="button" onClick={demo.run} disabled={demo.loading} className={base}>
       {demo.loading ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4 text-accent-hi" aria-hidden="true" />}
-      Dùng thử bản demo
+      {tr('Dùng thử bản demo')}
     </button>
   );
 }
@@ -152,9 +167,9 @@ function Nav({ reduce }) {
         className={`mx-auto flex h-14 max-w-6xl items-center gap-2 rounded-2xl border px-3 transition-all duration-300 sm:gap-3 sm:px-4 ${
           scrolled ? 'border-line bg-surface/80 shadow-[0_12px_32px_-20px_rgb(0_0_0/0.6)] backdrop-blur-xl' : 'border-transparent'
         }`}
-        aria-label="Trang giới thiệu"
+        aria-label={tr('Trang giới thiệu')}
       >
-        <Link to="/" className="flex items-center gap-2" aria-label="TaskFlow, trang chủ">
+        <Link to="/" className="flex items-center gap-2" aria-label={tr('TaskFlow, trang chủ')}>
           <LogoMark size={30} />
           <span className="font-display text-[16px] font-bold tracking-tight">TaskFlow</span>
         </Link>
@@ -175,23 +190,24 @@ function Nav({ reduce }) {
           ))}
         </ul>
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <LangSwitch className="hidden min-[400px]:flex" />
           <button
             type="button"
             onClick={toggle}
             className="hidden size-9 place-items-center rounded-xl text-muted hover:bg-surface-2 hover:text-ink min-[400px]:grid"
-            aria-label={theme === 'light' ? 'Chuyển sang giao diện tối' : 'Chuyển sang giao diện sáng'}
+            aria-label={theme === 'light' ? tr('Chuyển sang giao diện tối') : tr('Chuyển sang giao diện sáng')}
           >
             {theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
           </button>
           <Link to="/login" className="rounded-xl px-2.5 py-2 text-[13px] font-semibold whitespace-nowrap text-ink hover:bg-surface-2 sm:px-3">
-            Đăng nhập
+            {tr('Đăng nhập')}
           </Link>
           <Link
             to="/register"
             className="inline-flex h-9 items-center rounded-xl bg-accent px-3.5 text-[13px] font-semibold whitespace-nowrap text-white shadow-[0_8px_20px_-10px_var(--accent)] hover:brightness-110"
           >
-            <span className="sm:hidden">Đăng ký</span>
-            <span className="hidden sm:inline">Bắt đầu miễn phí</span>
+            <span className="sm:hidden">{tr('Đăng ký')}</span>
+            <span className="hidden sm:inline">{tr('Bắt đầu miễn phí')}</span>
           </Link>
         </div>
       </nav>
@@ -200,7 +216,8 @@ function Nav({ reduce }) {
 }
 
 function HeroTitle({ reduce }) {
-  const words = ['Làm', 'xong', 'việc,', 'nhìn', 'tiến', 'độ'];
+  // Câu tiêu đề tách theo từ để từng chữ trồi lên; phần cuối tô màu và có gạch sóng
+  const words = tr('Làm xong việc, nhìn tiến độ').split(' ');
   const word = (w, i) => (
     <Fragment key={i}>
       <motion.span
@@ -223,7 +240,7 @@ function HeroTitle({ reduce }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.1 + words.length * 0.06, ease: EASE_RISE }}
         >
-          dâng lên.
+          {tr('dâng lên.')}
         </motion.span>
         {/* Gạch chân hình sóng tự vẽ */}
         <svg className="absolute -bottom-2 left-0 h-3 w-[92%] sm:-bottom-3 sm:h-4" viewBox="0 0 220 16" preserveAspectRatio="none" aria-hidden="true">
@@ -257,7 +274,7 @@ function Hero({ reduce, demo }) {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60 motion-reduce:hidden" />
               <span className="relative inline-flex size-2 rounded-full bg-success" />
             </span>
-            Miễn phí · Không cần cài đặt
+            {tr('Miễn phí · Không cần cài đặt')}
           </motion.p>
 
           <div className="mt-6">
@@ -265,24 +282,25 @@ function Hero({ reduce, demo }) {
           </div>
 
           <motion.p {...reveal} transition={{ ...reveal.transition, delay: 0.5 }} className="mt-7 text-[16px] leading-relaxed text-muted sm:text-[17px]">
-            TaskFlow gom dự án, công việc và hạn chót vào một chỗ. Kéo thả trên bảng Kanban, xem lịch tháng, và nhìn mực nước trong mỗi dự án dâng cao mỗi khi
-            bạn làm xong một việc.
+            {tr(
+              'TaskFlow gom dự án, công việc và hạn chót vào một chỗ. Kéo thả trên bảng Kanban, xem lịch tháng, và nhìn mực nước trong mỗi dự án dâng cao mỗi khi bạn làm xong một việc.',
+            )}
           </motion.p>
 
           <motion.div {...reveal} transition={{ ...reveal.transition, delay: 0.6 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <PrimaryLink to="/register">Tạo tài khoản miễn phí</PrimaryLink>
+            <PrimaryLink to="/register">{tr('Tạo tài khoản miễn phí')}</PrimaryLink>
             <SecondaryAction demo={demo} />
           </motion.div>
 
           <motion.ul {...reveal} transition={{ ...reveal.transition, delay: 0.7 }} className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-muted">
             <li className="flex items-center gap-1.5">
-              <ShieldCheck className="size-4 text-success" aria-hidden="true" /> Mật khẩu mã hoá bcrypt
+              <ShieldCheck className="size-4 text-success" aria-hidden="true" /> {tr('Mật khẩu mã hoá bcrypt')}
             </li>
             <li className="flex items-center gap-1.5">
-              <Smartphone className="size-4 text-accent-hi" aria-hidden="true" /> Dùng tốt trên điện thoại
+              <Smartphone className="size-4 text-accent-hi" aria-hidden="true" /> {tr('Dùng tốt trên điện thoại')}
             </li>
             <li className="flex items-center gap-1.5">
-              <Moon className="size-4 text-accent-hi" aria-hidden="true" /> Giao diện tối và sáng
+              <Moon className="size-4 text-accent-hi" aria-hidden="true" /> {tr('Giao diện tối và sáng')}
             </li>
           </motion.ul>
         </div>
@@ -302,7 +320,7 @@ function Hero({ reduce, demo }) {
 function Ticker() {
   const items = [...TICKER, ...TICKER];
   return (
-    <div className="relative overflow-hidden border-y border-line bg-surface/60 py-4" aria-label="Các tính năng nổi bật">
+    <div className="relative overflow-hidden border-y border-line bg-surface/60 py-4" aria-label={tr('Các tính năng nổi bật')}>
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-canvas to-transparent sm:w-32" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-canvas to-transparent sm:w-32" />
       <ul className="marquee flex w-max items-center gap-8">
@@ -335,9 +353,9 @@ function Features() {
   return (
     <section id="tinh-nang" className="scroll-mt-24 px-4 py-20 sm:px-6 lg:py-28">
       <SectionHead
-        eyebrow="Tính năng"
-        title="Đủ để không sót việc nào"
-        body="Từ đồ án tốt nghiệp, ôn thi đến việc nhà, mọi thứ nằm gọn trong vài dự án và một bảng kéo thả."
+        eyebrow={tr('Tính năng')}
+        title={tr('Đủ để không sót việc nào')}
+        body={tr('Từ đồ án tốt nghiệp, ôn thi đến việc nhà, mọi thứ nằm gọn trong vài dự án và một bảng kéo thả.')}
       />
       <motion.ul
         initial="hidden"
@@ -376,7 +394,7 @@ function Features() {
 function HowItWorks() {
   return (
     <section id="cach-dung" className="scroll-mt-24 px-4 py-20 sm:px-6 lg:py-28">
-      <SectionHead eyebrow="Cách dùng" title="Ba bước, nước đầy bể" body="Cuộn xuống để xem bể nước đầy dần theo từng bước." />
+      <SectionHead eyebrow={tr('Cách dùng')} title={tr('Ba bước, nước đầy bể')} body={tr('Cuộn xuống để xem bể nước đầy dần theo từng bước.')} />
       <div className="mx-auto mt-14 max-w-5xl">
         <TideSteps />
       </div>
@@ -424,7 +442,7 @@ function Faq() {
   const [open, setOpen] = useState(0);
   return (
     <section id="cau-hoi" className="scroll-mt-24 px-4 py-20 sm:px-6 lg:py-28">
-      <SectionHead eyebrow="Câu hỏi thường gặp" title="Bạn đang thắc mắc?" />
+      <SectionHead eyebrow={tr('Câu hỏi thường gặp')} title={tr('Bạn đang thắc mắc?')} />
       <motion.ul {...reveal} className="mx-auto mt-12 max-w-3xl space-y-3">
         {FAQ.map((item, i) => (
           <FaqItem key={item.q} item={item} index={i} open={open === i} onToggle={() => setOpen(open === i ? -1 : i)} />
@@ -441,12 +459,14 @@ function FinalCta({ demo }) {
         {...reveal}
         className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[radial-gradient(120%_120%_at_0%_0%,#123a9c_0%,#06143a_55%,#040b22_100%)] px-6 pt-14 pb-28 text-center text-white sm:px-10 sm:pt-20 sm:pb-36"
       >
-        <h2 className="mx-auto max-w-2xl font-display text-[28px] leading-tight font-bold tracking-tight sm:text-[44px]">Bể của bạn đang chờ được đổ đầy.</h2>
+        <h2 className="mx-auto max-w-2xl font-display text-[28px] leading-tight font-bold tracking-tight sm:text-[44px]">
+          {tr('Bể của bạn đang chờ được đổ đầy.')}
+        </h2>
         <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-white/70 sm:text-[16px]">
-          Tạo tài khoản chưa tới một phút. Mình tạo sẵn một dự án hướng dẫn để bạn làm quen ngay.
+          {tr('Tạo tài khoản chưa tới một phút. Mình tạo sẵn một dự án hướng dẫn để bạn làm quen ngay.')}
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <PrimaryLink to="/register">Bắt đầu miễn phí</PrimaryLink>
+          <PrimaryLink to="/register">{tr('Bắt đầu miễn phí')}</PrimaryLink>
           {HAS_DEMO ? (
             <button
               type="button"
@@ -455,14 +475,14 @@ function FinalCta({ demo }) {
               className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white/10 px-6 text-[15px] font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15 disabled:opacity-70"
             >
               {demo.loading ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
-              Dùng thử bản demo
+              {tr('Dùng thử bản demo')}
             </button>
           ) : (
             <Link
               to="/login"
               className="inline-flex h-12 items-center justify-center rounded-xl bg-white/10 px-6 text-[15px] font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15"
             >
-              Đăng nhập
+              {tr('Đăng nhập')}
             </Link>
           )}
         </div>
@@ -489,13 +509,14 @@ function Footer() {
           <span className="font-display font-bold text-ink">TaskFlow</span>
           <span className="text-faint">© {new Date().getFullYear()}</span>
         </div>
-        <p className="text-faint">Làm bằng React, Express và MongoDB.</p>
-        <div className="flex gap-4">
+        <p className="text-faint">{tr('Làm bằng React, Express và MongoDB.')}</p>
+        <div className="flex items-center gap-4">
+          <LangSwitch />
           <Link to="/login" className="hover:text-ink">
-            Đăng nhập
+            {tr('Đăng nhập')}
           </Link>
           <Link to="/register" className="hover:text-ink">
-            Đăng ký
+            {tr('Đăng ký')}
           </Link>
         </div>
       </div>
@@ -509,7 +530,7 @@ export default function Landing() {
   const demo = useDemoLogin();
 
   useEffect(() => {
-    document.title = 'TaskFlow · Quản lý dự án và công việc';
+    document.title = tr('TaskFlow · Quản lý dự án và công việc');
     // Đánh thức máy chủ Render (bản miễn phí hay ngủ) để lúc bấm đăng nhập không phải chờ lâu
     fetch(`${API_URL}/api/health`).catch(() => {});
     return () => {

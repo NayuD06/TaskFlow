@@ -20,6 +20,11 @@ const queryClient = new QueryClient({
   },
 });
 
+// Service worker cho PWA (chỉ bật ở bản build, khi chạy dev thì bỏ qua để khỏi bị cache)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

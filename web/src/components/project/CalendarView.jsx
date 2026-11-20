@@ -1,3 +1,4 @@
+import { locale } from '../../lib/i18n.js';
 import { CalendarPlus, ChevronLeft, ChevronRight, Inbox, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
@@ -7,9 +8,10 @@ import { WEEKDAYS, formatMonth, isOverdue, isSameDay, monthGrid, startOfDay } fr
 import { useUI } from '../shell/UIContext.jsx';
 import TaskRow from '../task/TaskRow.jsx';
 import { useToast } from '../ui/Toasts.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-const dayFmt = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' });
+const dayFmt = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'numeric' });
 
 /** Giữ giờ cũ của deadline khi đổi ngày, nếu chưa có thì 17:00. */
 function onDay(day, deadline) {
@@ -92,8 +94,8 @@ export default function CalendarView({ tasks, projectId }) {
       {
         onSuccess: () =>
           notify({
-            message: `Đã dời “${task.title}” sang ${dayFmt.format(day)}`,
-            action: { label: 'Hoàn tác', onClick: () => update.mutate({ id, data: { deadline: task.deadline ?? null } }) },
+            message: tr('Đã dời “{title}” sang {date}', { title: task.title, date: dayFmt.format(day) }),
+            action: { label: tr('Hoàn tác'), onClick: () => update.mutate({ id, data: { deadline: task.deadline ?? null } }) },
           }),
         onError: (err) => notify({ tone: 'error', message: err.message }),
       },
@@ -117,12 +119,12 @@ export default function CalendarView({ tasks, projectId }) {
               }}
               className="h-8 rounded-lg px-2.5 text-xs font-semibold whitespace-nowrap text-muted hover:bg-surface-2 hover:text-ink"
             >
-              Hôm nay
+              {tr('Hôm nay')}
             </button>
             <button
               type="button"
               onClick={() => shift(-1)}
-              aria-label="Tháng trước"
+              aria-label={tr('Tháng trước')}
               className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink"
             >
               <ChevronLeft className="size-4" />
@@ -130,7 +132,7 @@ export default function CalendarView({ tasks, projectId }) {
             <button
               type="button"
               onClick={() => shift(1)}
-              aria-label="Tháng sau"
+              aria-label={tr('Tháng sau')}
               className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink"
             >
               <ChevronRight className="size-4" />
@@ -168,7 +170,7 @@ export default function CalendarView({ tasks, projectId }) {
                     key={k}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${dayFmt.format(day)}, ${list.length} việc`}
+                    aria-label={tr('{date}, {n} việc', { date: dayFmt.format(day), n: list.length })}
                     aria-pressed={isSel}
                     onClick={() => setSelected(day)}
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setSelected(day))}
@@ -200,7 +202,7 @@ export default function CalendarView({ tasks, projectId }) {
                           e.stopPropagation();
                           createOn(day);
                         }}
-                        aria-label={`Thêm việc ngày ${dayFmt.format(day)}`}
+                        aria-label={tr('Thêm việc ngày {date}', { date: dayFmt.format(day) })}
                         className="hidden size-6 place-items-center rounded-md text-faint opacity-0 group-hover:opacity-100 hover:bg-surface-3 hover:text-ink focus-visible:opacity-100 sm:grid"
                       >
                         <Plus className="size-3.5" />
@@ -223,16 +225,20 @@ export default function CalendarView({ tasks, projectId }) {
                       {list.slice(0, 3).map((t) => (
                         <Chip key={t._id} task={t} onOpen={openTask} />
                       ))}
-                      {list.length > 3 && <span className="px-1.5 text-[11px] font-semibold text-muted">+{list.length - 3} việc</span>}
+                      {list.length > 3 && <span className="px-1.5 text-[11px] font-semibold text-muted">{tr('+{n} việc', { n: list.length - 3 })}</span>}
                     </div>
-                    {open.length > 0 && <span className="sr-only">{open.length} việc chưa xong</span>}
+                    {open.length > 0 && (
+                      <span className="sr-only">
+                        {open.length} {tr('việc chưa xong')}
+                      </span>
+                    )}
                   </div>
                 );
               })}
             </motion.div>
           </AnimatePresence>
         </div>
-        <p className="mt-3 hidden text-xs text-faint sm:block">Kéo thả việc sang ngày khác để dời hạn. Nhấn dấu + trên ô để thêm việc cho ngày đó.</p>
+        <p className="mt-3 hidden text-xs text-faint sm:block">{tr('Kéo thả việc sang ngày khác để dời hạn. Nhấn dấu + trên ô để thêm việc cho ngày đó.')}</p>
       </section>
 
       <aside className="space-y-3.5">
@@ -244,7 +250,7 @@ export default function CalendarView({ tasks, projectId }) {
               onClick={() => createOn(selected)}
               className="flex h-8 items-center gap-1.5 rounded-lg bg-accent/12 px-2.5 text-xs font-semibold text-accent-hi hover:bg-accent/20"
             >
-              <CalendarPlus className="size-3.5" aria-hidden="true" /> Thêm
+              <CalendarPlus className="size-3.5" aria-hidden="true" /> {tr('Thêm')}
             </button>
           </div>
           <ul className="-mx-2 mt-2">
@@ -253,23 +259,23 @@ export default function CalendarView({ tasks, projectId }) {
                 <TaskRow key={t._id} task={t} showProject={false} />
               ))}
             </AnimatePresence>
-            {selectedTasks.length === 0 && <li className="px-2 py-3 text-[13px] text-faint">Không có việc nào đến hạn ngày này.</li>}
+            {selectedTasks.length === 0 && <li className="px-2 py-3 text-[13px] text-faint">{tr('Không có việc nào đến hạn ngày này.')}</li>}
           </ul>
         </section>
 
         <section className="rounded-[20px] border border-line bg-surface p-4">
           <h3 className="flex items-center gap-2 font-display text-sm font-bold">
-            <Inbox className="size-4 text-muted" aria-hidden="true" /> Chưa có hạn
+            <Inbox className="size-4 text-muted" aria-hidden="true" /> {tr('Chưa có hạn')}
             <span className="rounded-md bg-surface-3 px-1.5 font-sans text-[11px] text-muted">{undated.length}</span>
           </h3>
-          <p className="mt-1 text-xs text-faint">Kéo vào lịch để đặt hạn chót.</p>
+          <p className="mt-1 text-xs text-faint">{tr('Kéo vào lịch để đặt hạn chót.')}</p>
           <ul className="mt-3 space-y-1.5">
             {undated.slice(0, 12).map((t) => (
               <li key={t._id}>
                 <Chip task={t} onOpen={openTask} />
               </li>
             ))}
-            {undated.length === 0 && <li className="text-[13px] text-faint">Mọi việc đều đã có hạn.</li>}
+            {undated.length === 0 && <li className="text-[13px] text-faint">{tr('Mọi việc đều đã có hạn.')}</li>}
           </ul>
         </section>
       </aside>

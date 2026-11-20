@@ -2,22 +2,23 @@ import { FolderPlus, ListPlus, MoveRight } from 'lucide-react';
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const STEPS = [
   {
     icon: FolderPlus,
-    title: 'Tạo một dự án',
-    body: 'Đặt tên và chọn màu cho dự án, ví dụ "Đồ án tốt nghiệp", "Luyện thi IELTS" hay "Việc nhà". Mỗi dự án là một bể nước riêng.',
+    title: tr('Tạo một dự án'),
+    body: tr('Đặt tên và chọn màu cho dự án, ví dụ "Đồ án tốt nghiệp", "Luyện thi IELTS" hay "Việc nhà". Mỗi dự án là một bể nước riêng.'),
   },
   {
     icon: ListPlus,
-    title: 'Thêm việc và hạn chót',
-    body: 'Gõ nhanh ngay trong cột, nhấn Enter để thêm liên tục. Đặt mức ưu tiên, hạn chót và chia nhỏ bằng checklist.',
+    title: tr('Thêm việc và hạn chót'),
+    body: tr('Gõ nhanh ngay trong cột, nhấn Enter để thêm liên tục. Đặt mức ưu tiên, hạn chót và chia nhỏ bằng checklist.'),
   },
   {
     icon: MoveRight,
-    title: 'Kéo sang Đã xong',
-    body: 'Tick một cái hoặc kéo thẻ sang cột Đã xong, nước trong bể dâng lên một chút. Nhìn bể đầy dần là thấy mình đã đi được bao xa.',
+    title: tr('Kéo sang Đã xong'),
+    body: tr('Tick một cái hoặc kéo thẻ sang cột Đã xong, nước trong bể dâng lên một chút. Nhìn bể đầy dần là thấy mình đã đi được bao xa.'),
   },
 ];
 
@@ -83,14 +84,14 @@ export default function TideSteps() {
           {/* Hai lớp chữ: màu chữ thường ở trên nền, chữ trắng chỉ hiện phần nằm trong nước */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
             <motion.span className="font-display text-4xl font-bold tabular-nums lg:text-6xl">{label}</motion.span>
-            <span className="mt-1 text-xs font-medium text-muted lg:mt-2 lg:text-sm">bể đã đầy</span>
+            <span className="mt-1 text-xs font-medium text-muted lg:mt-2 lg:text-sm">{tr('bể đã đầy')}</span>
           </div>
           <motion.div
             className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center text-white"
             style={{ clipPath: clip }}
           >
             <motion.span className="font-display text-4xl font-bold tabular-nums lg:text-6xl">{label}</motion.span>
-            <span className="mt-1 text-xs font-medium text-white/80 lg:mt-2 lg:text-sm">bể đã đầy</span>
+            <span className="mt-1 text-xs font-medium text-white/80 lg:mt-2 lg:text-sm">{tr('bể đã đầy')}</span>
           </motion.div>
         </div>
       </div>
@@ -115,9 +116,9 @@ export default function TideSteps() {
               <div className="relative grid size-10 shrink-0 place-items-center rounded-full border border-line bg-surface" aria-hidden="true" inert>
                 <LiquidCheck checked={done} size={24} color={done ? 'var(--accent)' : 'var(--line-strong)'} label={s.title} />
               </div>
-              <motion.div initial={false} animate={{ opacity: done ? 1 : 0.55, x: done ? 0 : 6 }} transition={{ duration: 0.45 }} className="min-w-0 pt-1">
+              <motion.div initial={false} animate={{ opacity: done ? 1 : 0.8, x: done ? 0 : 6 }} transition={{ duration: 0.45 }} className="min-w-0 pt-1">
                 <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-accent-hi uppercase">
-                  <Icon className="size-4" aria-hidden="true" /> Bước {i + 1}
+                  <Icon className="size-4" aria-hidden="true" /> {tr('Bước')} {i + 1}
                 </p>
                 <h3 className="mt-2 font-display text-xl font-bold tracking-tight sm:text-2xl">{s.title}</h3>
                 <p className="mt-2 max-w-md text-[15px] leading-relaxed text-muted">{s.body}</p>

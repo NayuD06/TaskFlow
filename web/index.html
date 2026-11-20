@@ -4,9 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="TaskFlow: quản lý dự án và công việc miễn phí với bảng Kanban kéo thả, lịch hạn chót và bể nước tiến độ." />
+    <meta name="keywords" content="quản lý công việc, to-do list, kanban, quản lý dự án, task manager, TaskFlow" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TaskFlow" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:title" content="TaskFlow · Quản lý dự án và công việc" />
     <meta property="og:description" content="Kéo thả công việc, theo dõi hạn chót và nhìn tiến độ dâng lên như mực nước. Miễn phí, dùng tốt trên điện thoại." />
+    <meta property="og:image" content="%SITE_URL%/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="TaskFlow: Mỗi việc xong, mực nước lại dâng." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TaskFlow · Quản lý dự án và công việc" />
+    <meta name="twitter:description" content="Kanban kéo thả, lịch hạn chót, nhắc việc và bể nước tiến độ. Miễn phí." />
+    <meta name="twitter:image" content="%SITE_URL%/og.jpg" />
     <meta name="theme-color" content="#04060b" />
     <script>
       // Đặt theme trước khi React chạy để không bị nháy màu
@@ -14,20 +26,41 @@
         var t = localStorage.getItem('taskflow-theme') === 'light' ? 'light' : 'dark';
         document.documentElement.dataset.theme = t;
         if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#edf1f7');
+        var a = localStorage.getItem('taskflow-accent');
+        if (a && /^[a-z]+$/.test(a)) document.documentElement.dataset.accent = a;
       } catch (e) {
         document.documentElement.dataset.theme = 'dark';
       }
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TaskFlow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>TaskFlow</title>
+    <title>TaskFlow · Quản lý dự án và công việc</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TaskFlow",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["vi", "en"],
+        "description": "Quản lý dự án và công việc miễn phí với bảng Kanban kéo thả, lịch hạn chót, nhắc việc và bể nước tiến độ.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" }
+      }
+    </script>
   </head>
   <body>
+    <noscript>TaskFlow cần bật JavaScript để chạy. / TaskFlow needs JavaScript enabled.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -2,14 +2,17 @@ import { CornerDownLeft, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useCreateTask } from '../../hooks/queries.js';
+import { useUI } from '../shell/UIContext.jsx';
 import { useToast } from '../ui/Toasts.jsx';
+import { tr } from '../../lib/i18n.js';
 
 /** Ô thêm việc nhanh: Enter để tạo và giữ ô mở cho việc tiếp theo, Esc để đóng. */
-export default function QuickAdd({ projectId, status = 'todo', open, onOpenChange, extra = {}, label = 'Thêm việc' }) {
+export default function QuickAdd({ projectId, status = 'todo', open, onOpenChange, extra = {}, label = tr('Thêm việc') }) {
   const [title, setTitle] = useState('');
   const inputRef = useRef(null);
   const create = useCreateTask();
   const notify = useToast();
+  const { openTask } = useUI();
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -20,7 +23,14 @@ export default function QuickAdd({ projectId, status = 'todo', open, onOpenChang
     const text = title.trim();
     if (!text) return;
     setTitle('');
-    create.mutate({ title: text, project: projectId, status, ...extra }, { onError: (err) => notify({ tone: 'error', message: err.message }) });
+    create.mutate(
+      { title: text, project: projectId, status, ...extra },
+      {
+        onSuccess: (task) =>
+          notify({ tone: 'success', message: tr('Đã thêm “{title}”', { title: task.title }), action: { label: tr('Mở'), onClick: () => openTask(task._id) } }),
+        onError: (err) => notify({ tone: 'error', message: err.message }),
+      },
+    );
   };
 
   return (
@@ -42,21 +52,21 @@ export default function QuickAdd({ projectId, status = 'todo', open, onOpenChang
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Escape' && onOpenChange(false)}
               onBlur={() => !title.trim() && onOpenChange(false)}
-              placeholder="Tên công việc..."
+              placeholder={tr('Tên công việc...')}
               maxLength={200}
-              aria-label="Tên công việc mới"
+              aria-label={tr('Tên công việc mới')}
               className="h-9 w-full bg-transparent pr-9 pl-2.5 text-[13px] outline-none placeholder:text-faint"
             />
             <button
               type="submit"
-              aria-label="Thêm"
+              aria-label={tr('Thêm')}
               className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-lg bg-accent text-white disabled:opacity-40"
               disabled={!title.trim()}
             >
               <CornerDownLeft className="size-3.5" />
             </button>
           </div>
-          <p className="mt-1.5 px-1 text-[11px] text-faint">Enter để thêm, Esc để đóng</p>
+          <p className="mt-1.5 px-1 text-[11px] text-faint">{tr('Enter để thêm, Esc để đóng')}</p>
         </motion.form>
       ) : (
         <motion.button

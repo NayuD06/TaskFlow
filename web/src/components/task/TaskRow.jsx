@@ -3,8 +3,9 @@ import { useToggleTask } from '../../hooks/queries.js';
 import { PRIORITY } from '../../lib/constants.js';
 import { useUI } from '../shell/UIContext.jsx';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
-import { ChecklistCount, DueChip, PriorityPill, ProjectTag } from '../ui/Pills.jsx';
+import { ChecklistCount, DueChip, PriorityPill, ProjectTag, TagChips } from '../ui/Pills.jsx';
 import { useToast } from '../ui/Toasts.jsx';
+import { tr } from '../../lib/i18n.js';
 
 /** Tên task có gạch ngang chạy dần qua từng dòng khi hoàn thành. */
 export function StrikeTitle({ done, children, className = '' }) {
@@ -37,8 +38,8 @@ export default function TaskRow({ task, showProject = true, className = '' }) {
         if (!done)
           notify({
             tone: 'success',
-            message: `Đã xong “${task.title}”`,
-            action: { label: 'Hoàn tác', onClick: () => toggle.mutate({ ...task, status: 'done' }) },
+            message: tr('Đã xong “{title}”', { title: task.title }),
+            action: { label: tr('Hoàn tác'), onClick: () => toggle.mutate({ ...task, status: 'done' }) },
           });
       },
       onError: (err) => notify({ tone: 'error', message: err.message }),
@@ -58,7 +59,7 @@ export default function TaskRow({ task, showProject = true, className = '' }) {
           checked={done}
           color={PRIORITY[task.priority]?.color}
           onToggle={onToggle}
-          label={done ? `Bỏ đánh dấu xong: ${task.title}` : `Đánh dấu xong: ${task.title}`}
+          label={done ? tr('Bỏ đánh dấu xong: {title}', { title: task.title }) : tr('Đánh dấu xong: {title}', { title: task.title })}
         />
       </span>
       <div className="min-w-0 flex-1">
@@ -68,6 +69,7 @@ export default function TaskRow({ task, showProject = true, className = '' }) {
         <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
           {showProject && <ProjectTag project={task.project} className="max-w-40" />}
           <ChecklistCount checklist={task.checklist} />
+          <TagChips tags={task.tags} />
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-1.5">

@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 
 export const STATUSES = ['todo', 'doing', 'done'];
 export const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+export const MAX_TAGS = 8;
+export const MAX_TAG_LENGTH = 24;
 
 const checklistItemSchema = new mongoose.Schema(
   {
@@ -62,6 +64,12 @@ const taskSchema = new mongoose.Schema(
       default: [],
       validate: [(v) => v.length <= 50, 'Checklist tối đa 50 mục'],
     },
+    // Nhãn tự do do người dùng đặt (đã chuẩn hoá ở taskQuery.normalizeTags)
+    tags: {
+      type: [{ type: String, trim: true, maxlength: [MAX_TAG_LENGTH, `Mỗi nhãn tối đa ${MAX_TAG_LENGTH} ký tự`] }],
+      default: [],
+      validate: [(v) => v.length <= MAX_TAGS, `Tối đa ${MAX_TAGS} nhãn cho một công việc`],
+    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -76,5 +84,6 @@ taskSchema.pre('save', function syncCompletedAt() {
 
 taskSchema.index({ project: 1, status: 1, order: 1 });
 taskSchema.index({ owner: 1, status: 1, deadline: 1 });
+taskSchema.index({ owner: 1, tags: 1 });
 
 export const Task = mongoose.model('Task', taskSchema);

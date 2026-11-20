@@ -18,7 +18,8 @@ Mỗi người tự đăng ký tài khoản và chỉ thấy dữ liệu của c
 
 **Tài khoản**
 - Đăng ký, đăng nhập, đăng xuất. Người mới đăng ký được tạo sẵn 1 dự án hướng dẫn
-- Trang **Tài khoản**: đổi tên, chọn màu avatar, đổi mật khẩu, đăng xuất mọi thiết bị, xoá tài khoản (xoá luôn toàn bộ dữ liệu)
+- Trang **Tài khoản**: đổi tên, chọn ảnh đại diện (chữ cái đầu, 12 emoji có sẵn hoặc tải ảnh lên), chọn **màu nhấn** cho cả giao diện (10 màu, xem trước ngay), đổi ngôn ngữ, đổi mật khẩu, đăng xuất mọi thiết bị, xoá tài khoản (xoá luôn toàn bộ dữ liệu)
+- Ảnh tải lên được cắt vuông và thu nhỏ còn 160px ngay trên trình duyệt (WebP hoặc JPEG) nên lưu thẳng trong MongoDB, không cần dịch vụ lưu ảnh
 - Đồng hồ đo độ mạnh mật khẩu, hiện/ẩn mật khẩu, báo lỗi ngay dưới từng ô
 - Nút "Dùng thử bằng tài khoản demo" (bật bằng biến môi trường). Tài khoản demo bị khoá các thao tác phá hoại
 - Hết phiên thì tự đưa về trang đăng nhập, đăng nhập xong quay lại đúng trang đang mở
@@ -38,18 +39,37 @@ Mỗi người tự đăng ký tài khoản và chỉ thấy dữ liệu của c
 - **Bảng Kanban**: 3 cột Cần làm, Đang làm, Đã xong. Kéo thả bằng chuột, cảm ứng hoặc bàn phím (Space để nhấc, mũi tên để di chuyển). Thứ tự được lưu lại.
 - **Danh sách**: nhóm theo trạng thái, thu gọn được
 - **Lịch tháng**: kéo việc sang ngày khác để dời hạn, kéo việc "chưa có hạn" vào lịch để đặt hạn
-- Thêm nhanh ngay trong cột (Enter để thêm liên tục), lọc theo ưu tiên, tìm trong dự án
+- Thêm nhanh ngay trong cột (Enter để thêm liên tục), tìm trong dự án (tìm cả theo nhãn)
+- **Bộ lọc nâng cao**: chọn nhiều mức ưu tiên, lọc theo nhãn, theo hạn (hôm nay, 7 ngày tới, trễ hạn, chưa có hạn). Các bộ lọc đang bật hiện thành chip, bấm để bỏ từng cái
+- Kiểu Danh sách sắp xếp được theo thứ tự trên bảng, hạn chót, ưu tiên, mới cập nhật, tên (nhớ lựa chọn cho lần sau)
 
 **Công việc**
 - Tên, mô tả, trạng thái, 4 mức ưu tiên (Khẩn cấp, Cao, Vừa, Thấp), hạn chót kèm nút chọn nhanh, checklist việc con
+- **Nhãn** (tối đa 8 nhãn, mỗi nhãn 24 ký tự): gõ rồi Enter hoặc dấu phẩy, gợi ý từ các nhãn đã dùng. Mỗi nhãn luôn ra cùng một màu
 - Bảng chi tiết trượt từ bên phải, tự lưu từng trường
-- Xoá có nút **Hoàn tác**
+- Thông báo nhỏ (toast) khi thêm, sửa, xoá; xoá và đánh dấu xong đều có nút **Hoàn tác**
+- Khung xương (skeleton) lúc đang tải, màn hình trống có hình minh hoạ và gợi ý nên làm gì tiếp
 
 **Khác**
 - **Việc của tôi**: tất cả việc đang mở ở mọi dự án, nhóm theo Trễ hạn, Hôm nay, 7 ngày tới, Sau này, Chưa có hạn
-- **Ctrl K** (hoặc ⌘K): tìm nhanh việc, dự án, trang, không cần gõ dấu
-- Phím tắt: **N** thêm việc mới, **Ctrl B** thu gọn thanh bên
-- Giao diện tối (mặc định) và sáng, dùng tốt trên điện thoại
+- **Ctrl K** (hoặc ⌘K, hoặc **/**): tìm nhanh việc, dự án, trang, không cần gõ dấu. Gõ `#nhãn` để tìm theo nhãn
+- **Nhắc việc**: chuông trên thanh trên báo các việc trễ hạn và sắp đến hạn trong 24 giờ. Bật "Báo trước 1 giờ" để nhận thông báo của trình duyệt
+- **Song ngữ Tiếng Việt / English**: nút đổi ngôn ngữ ở thanh trên, trang giới thiệu, trang đăng nhập và trang Tài khoản. Lần đầu mở web tự chọn theo ngôn ngữ trình duyệt
+- Giao diện tối (mặc định) và sáng, dùng tốt trên điện thoại, cài được như ứng dụng (PWA)
+- Trang 404 riêng với số 404 làm bằng nước
+
+### Phím tắt
+
+| Phím | Tác dụng |
+| --- | --- |
+| `N` | Thêm việc mới |
+| `/` hoặc `Ctrl K` | Mở ô tìm nhanh |
+| `?` | Xem bảng phím tắt |
+| `G` rồi `D` / `P` / `M` / `S` | Đến Tổng quan / Dự án / Việc của tôi / Tài khoản |
+| `Ctrl B` | Thu gọn thanh bên |
+| `Space`, mũi tên | Nhấc và di chuyển thẻ trên bảng Kanban |
+
+Phím tắt tự tắt khi đang gõ trong ô nhập hoặc đang mở hộp thoại.
 
 ### Hiệu ứng riêng
 
@@ -59,6 +79,13 @@ Mỗi người tự đăng ký tài khoản và chỉ thấy dữ liệu của c
 - Viên chọn trượt ở mọi nhóm nút, số liệu đếm lên, biểu đồ tự vẽ nét
 - Trang đăng nhập có bể nước và thẻ công việc trôi nổi, form rung nhẹ khi nhập sai
 - Tôn trọng cài đặt *Reduce motion* của hệ điều hành
+
+### SEO, PWA, trợ năng, tốc độ
+
+- Thẻ meta mô tả, Open Graph và Twitter kèm ảnh xem trước `og.jpg` (1200×630) khi chia sẻ link lên Facebook, Zalo, Messenger. `robots.txt` và `sitemap.xml` được tạo lúc build
+- Favicon, icon cho màn hình chính iOS/Android, `manifest.webmanifest` và service worker `sw.js` (lưu đệm file tĩnh, vẫn mở được khung app khi mất mạng). Service worker chỉ chạy ở bản build, không chạy lúc `npm run dev`
+- Kiểm tra bằng **axe-core** trên 23 màn hình (sáng/tối, Việt/Anh, điện thoại/máy tính, nhiều màu nhấn): 0 lỗi WCAG 2.1 AA. Màu chữ đạt tương phản 4.5:1, mọi nút có nhãn cho trình đọc màn hình, dùng được hoàn toàn bằng bàn phím
+- Mỗi trang là một file JS riêng, tải khi cần (lazy). Thư viện lớn (React, Motion, dnd-kit...) tách file riêng để trình duyệt lưu đệm lâu dài
 
 ## Bảo mật
 
@@ -98,8 +125,9 @@ todo-list/
 │   │   │   ├── task/         # bảng chi tiết, checklist, dòng việc
 │   │   │   └── ui/           # nút, hộp thoại, biểu đồ, toast...
 │   │   ├── hooks/            # gọi API bằng TanStack Query, cập nhật lạc quan
-│   │   ├── lib/              # api client, ngày giờ, hằng số, theme
-│   │   └── pages/            # Giới thiệu, Đăng nhập, Đăng ký, Tổng quan, Dự án, Trang dự án, Việc của tôi, Tài khoản
+│   │   ├── lib/              # api client, ngày giờ, hằng số, theme, i18n (i18n-en.js là bản tiếng Anh)
+│   │   └── pages/            # Giới thiệu, Đăng nhập, Đăng ký, Tổng quan, Dự án, Trang dự án, Việc của tôi, Tài khoản, 404
+│   ├── public/               # icon, ảnh og.jpg, manifest, service worker
 │   ├── vercel.json
 │   └── .env.example
 ├── render.yaml               # Blueprint deploy API lên Render
@@ -177,6 +205,11 @@ Hạn chót trong dữ liệu mẫu tính theo thời điểm chạy seed, nên 
 | `VITE_API_URL` | `http://localhost:5000` | URL gốc của API, không có `/` ở cuối. Được gắn vào lúc build |
 | `VITE_DEMO_EMAIL` | `demo@taskflow.dev` | Không bắt buộc. Cùng với biến dưới, hiện nút "Dùng thử bằng tài khoản demo" |
 | `VITE_DEMO_PASSWORD` | `Demo@123456` | Không bắt buộc. Lộ ra trình duyệt, chỉ dùng cho tài khoản demo |
+| `VITE_SITE_URL` | `https://taskflow.vercel.app` | Không bắt buộc. Địa chỉ web chính thức, dùng cho ảnh xem trước và sitemap. Trên Vercel tự lấy từ tên miền production nên không cần đặt |
+
+### Thêm chữ cần dịch
+
+Mọi chữ hiển thị đều bọc trong `tr('Câu tiếng Việt')` (file `web/src/lib/i18n.js`). Câu tiếng Việt chính là khoá, bản tiếng Anh nằm trong `web/src/lib/i18n-en.js`. Thiếu bản dịch thì web hiện luôn câu tiếng Việt chứ không lỗi. Có biến thì viết `tr('Còn {n} việc', { n })`.
 
 ## API
 
@@ -191,7 +224,7 @@ Trừ `/health` và `/auth/register`, `/auth/login`, mọi endpoint đều cần
 | POST | `/auth/register` | Đăng ký: `{ name, email, password }` → `{ user, token }` (201). Email trùng trả `409` |
 | POST | `/auth/login` | Đăng nhập: `{ email, password }` → `{ user, token }` |
 | GET | `/auth/me` | Thông tin người đang đăng nhập |
-| PATCH | `/auth/me` | Sửa `name`, `avatarColor` |
+| PATCH | `/auth/me` | Sửa `name`, `avatarColor`, `accentColor` (một trong 10 màu), `avatar` (`''`, `emoji:🐳` hoặc ảnh `data:image/webp;base64,...` dưới 60 KB) |
 | POST | `/auth/change-password` | `{ currentPassword, newPassword }` → `{ user, token }`, mọi token cũ mất hiệu lực |
 | POST | `/auth/logout-all` | Đăng xuất mọi thiết bị |
 | DELETE | `/auth/me` | Xoá tài khoản và toàn bộ dữ liệu: `{ password }` |
@@ -214,8 +247,9 @@ Màu hợp lệ: `blue`, `sky`, `cyan`, `teal`, `green`, `amber`, `orange`, `ros
 
 | Method | Endpoint | Mô tả |
 | --- | --- | --- |
-| GET | `/tasks` | Danh sách. Query: `project`, `status` (`todo`, `doing`, `done`, `open`, `overdue`), `priority` (`low`, `medium`, `high`, `urgent`), `due` (`today`, `week`, `overdue`, `none`), `search`, `sort` (`board`, `newest`, `oldest`, `deadline`, `priority`), `tzOffset` |
-| POST | `/tasks` | Tạo: `{ project, title, description?, status?, priority?, deadline?, checklist? }` |
+| GET | `/tasks` | Danh sách. Query: `project`, `status` (`todo`, `doing`, `done`, `open`, `overdue`), `priority` (`low`, `medium`, `high`, `urgent`, nhiều giá trị cách nhau dấu phẩy), `due` (`today`, `week`, `overdue`, `none`), `tag`, `search` (tên, mô tả, nhãn), `sort` (`board`, `newest`, `oldest`, `deadline`, `priority`, `updated`, `title`), `tzOffset` |
+| GET | `/tasks/tags` | Các nhãn bạn đã dùng kèm số việc: `[{ name, count }]` |
+| POST | `/tasks` | Tạo: `{ project, title, description?, status?, priority?, deadline?, checklist?, tags? }` |
 | GET | `/tasks/:id` | Chi tiết |
 | PATCH | `/tasks/:id` | Sửa một hoặc nhiều trường |
 | PATCH | `/tasks/:id/toggle` | Đảo trạng thái xong / chưa xong |
@@ -223,7 +257,7 @@ Màu hợp lệ: `blue`, `sky`, `cyan`, `teal`, `green`, `amber`, `orange`, `ros
 | DELETE | `/tasks/:id` | Xoá |
 | DELETE | `/tasks?status=done&project=<id>` | Dọn các việc đã xong của một dự án |
 
-`checklist` là mảng `[{ text, done }]`, tối đa 50 mục. `tzOffset` theo quy ước của `Date.getTimezoneOffset()` (Việt Nam là `-420`), dùng để tính "hôm nay" đúng múi giờ.
+`checklist` là mảng `[{ text, done }]`, tối đa 50 mục. `tags` là mảng chuỗi, tối đa 8 nhãn, mỗi nhãn 24 ký tự, trùng nhau (không phân biệt hoa thường) sẽ được gộp. `tzOffset` theo quy ước của `Date.getTimezoneOffset()` (Việt Nam là `-420`), dùng để tính "hôm nay" đúng múi giờ.
 
 ### Thống kê và hoạt động
 

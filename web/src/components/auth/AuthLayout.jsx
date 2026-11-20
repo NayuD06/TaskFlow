@@ -1,16 +1,19 @@
 import { CalendarDays, Check, KanbanSquare, Moon, Sun, TrendingUp } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
+import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { useTheme } from '../../lib/theme.js';
 import { LogoMark, LogoWord } from '../shell/Logo.jsx';
+import LangSwitch from '../ui/LangSwitch.jsx';
+import { tr } from '../../lib/i18n.js';
 
 // Sóng cho quả cầu minh hoạ: chu kỳ 24, dài gấp đôi khung để trôi liền mạch
 const ORB_WAVE = `M0 8 Q6 2 12 8 ${Array.from({ length: 15 }, (_, i) => `T${24 + i * 12} 8`).join(' ')} V160 H0 Z`;
 
 const FEATURES = [
-  { icon: KanbanSquare, text: 'Bảng Kanban kéo thả' },
-  { icon: CalendarDays, text: 'Lịch hạn chót' },
-  { icon: TrendingUp, text: 'Nhịp hoàn thành mỗi ngày' },
+  { icon: KanbanSquare, text: tr('Bảng Kanban kéo thả') },
+  { icon: CalendarDays, text: tr('Lịch hạn chót') },
+  { icon: TrendingUp, text: tr('Nhịp hoàn thành mỗi ngày') },
 ];
 
 function Float({ children, delay = 0, className = '' }) {
@@ -31,15 +34,15 @@ function Float({ children, delay = 0, className = '' }) {
 function Showcase() {
   return (
     <div className="relative hidden overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_0%_0%,#123a9c_0%,#06143a_55%,#040b22_100%)] p-10 text-white lg:flex lg:flex-col">
-      <Link to="/" className="flex w-fit items-center gap-2.5" aria-label="TaskFlow, về trang chủ">
+      <Link to="/" className="flex w-fit items-center gap-2.5" aria-label={tr('TaskFlow, về trang chủ')}>
         <LogoMark size={36} />
         <LogoWord />
       </Link>
 
       <div className="relative z-10 mt-14 max-w-md">
-        <h2 className="font-display text-[34px] leading-[1.15] font-bold tracking-tight">Mỗi việc xong, mực nước lại dâng.</h2>
+        <h2 className="font-display text-[34px] leading-[1.15] font-bold tracking-tight">{tr('Mỗi việc xong, mực nước lại dâng.')}</h2>
         <p className="mt-4 text-[15px] leading-relaxed text-white/70">
-          Quản lý dự án, kéo thả công việc, theo dõi hạn chót và nhìn tiến độ của bạn lớn dần lên mỗi ngày.
+          {tr('Quản lý dự án, kéo thả công việc, theo dõi hạn chót và nhìn tiến độ của bạn lớn dần lên mỗi ngày.')}
         </p>
         <ul className="mt-6 flex flex-wrap gap-2">
           {FEATURES.map(({ icon: Icon, text }) => (
@@ -52,14 +55,14 @@ function Showcase() {
 
       <div className="relative mt-8 min-h-64 max-h-[420px] flex-1" aria-hidden="true">
         <Float delay={0.2} className="top-[14%] left-0 w-64 p-4">
-          <p className="text-[11px] font-semibold tracking-wide text-white/50 uppercase">Đang làm</p>
+          <p className="text-[11px] font-semibold tracking-wide text-white/50 uppercase">{tr('Đang làm')}</p>
           <div className="mt-2.5 flex items-start gap-2.5 rounded-xl bg-white/[0.06] p-3">
             <span className="mt-0.5 grid size-4 place-items-center rounded-full border-2 border-[#ff4d6a]" />
             <div>
-              <p className="text-[13px] font-medium">Viết chương 3: Thiết kế</p>
+              <p className="text-[13px] font-medium">{tr('Viết chương 3: Thiết kế')}</p>
               <div className="mt-2 flex gap-1.5">
-                <span className="rounded-full bg-[#ff4d6a]/15 px-2 py-0.5 text-[10px] font-semibold text-[#ff8da0]">Khẩn cấp</span>
-                <span className="rounded-full bg-[#2f6bff]/20 px-2 py-0.5 text-[10px] font-semibold text-[#8fb0ff]">Mai 17:00</span>
+                <span className="rounded-full bg-[#ff4d6a]/15 px-2 py-0.5 text-[10px] font-semibold text-[#ff8da0]">{tr('Khẩn cấp')}</span>
+                <span className="rounded-full bg-[#2f6bff]/20 px-2 py-0.5 text-[10px] font-semibold text-[#8fb0ff]">{tr('Mai {time}', { time: '17:00' })}</span>
               </div>
             </div>
           </div>
@@ -79,7 +82,7 @@ function Showcase() {
             </motion.div>
             <span className="absolute inset-0 grid place-items-center font-display text-xl font-bold">68%</span>
           </div>
-          <p className="mt-2.5 text-[11px] text-white/60">Tiến độ tuần này</p>
+          <p className="mt-2.5 text-[11px] text-white/60">{tr('Tiến độ tuần này')}</p>
         </Float>
 
         <Float delay={0.7} className="bottom-[16%] left-[22%] w-60 p-3.5">
@@ -87,7 +90,7 @@ function Showcase() {
             <span className="grid size-5 place-items-center rounded-full bg-[#22c38e]">
               <Check className="size-3 text-white" strokeWidth={3} />
             </span>
-            <p className="text-[13px] text-white/60 line-through">Gửi bản nháp cho thầy</p>
+            <p className="text-[13px] text-white/60 line-through">{tr('Gửi bản nháp cho thầy')}</p>
           </div>
           <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/10">
             <motion.div
@@ -116,25 +119,31 @@ function Showcase() {
   );
 }
 
-export default function AuthLayout({ title, subtitle, children, footer }) {
+export default function AuthLayout({ title, subtitle, children, footer, pageTitle }) {
   const { theme, toggle } = useTheme();
+  useEffect(() => {
+    document.title = `${pageTitle || title} · TaskFlow`;
+  }, [pageTitle, title]);
   return (
     <div className="grid min-h-dvh bg-canvas p-3 lg:grid-cols-[1.05fr_1fr]">
       <Showcase />
       <main className="relative flex flex-col px-3 py-4 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 lg:invisible" aria-label="TaskFlow, về trang chủ">
+          <Link to="/" className="flex items-center gap-2 lg:invisible" aria-label={tr('TaskFlow, về trang chủ')}>
             <LogoMark size={30} />
             <span className="font-display text-[16px] font-bold tracking-tight">TaskFlow</span>
           </Link>
-          <button
-            type="button"
-            onClick={toggle}
-            className="grid size-10 place-items-center rounded-xl border border-line bg-surface text-muted hover:text-ink"
-            aria-label={theme === 'light' ? 'Chuyển sang giao diện tối' : 'Chuyển sang giao diện sáng'}
-          >
-            {theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <LangSwitch className="flex h-10 border border-line bg-surface px-2.5" />
+            <button
+              type="button"
+              onClick={toggle}
+              className="grid size-10 place-items-center rounded-xl border border-line bg-surface text-muted hover:text-ink"
+              aria-label={theme === 'light' ? tr('Chuyển sang giao diện tối') : tr('Chuyển sang giao diện sáng')}
+            >
+              {theme === 'light' ? <Moon className="size-4" /> : <Sun className="size-4" />}
+            </button>
+          </div>
         </div>
 
         <motion.div

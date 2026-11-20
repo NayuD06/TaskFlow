@@ -10,9 +10,10 @@ import { PRIORITY, STATUS, STATUSES } from '../../lib/constants.js';
 import { useUI } from '../shell/UIContext.jsx';
 import { StrikeTitle } from '../task/TaskRow.jsx';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
-import { ChecklistCount, DueChip, PriorityPill } from '../ui/Pills.jsx';
+import { ChecklistCount, DueChip, PriorityPill, TagChips } from '../ui/Pills.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import QuickAdd from './QuickAdd.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || new Date(b.createdAt) - new Date(a.createdAt);
 
@@ -43,9 +44,16 @@ function CardBody({ task, overlay = false }) {
             size={18}
             checked={done}
             color={color}
-            label={done ? `Bỏ đánh dấu xong: ${task.title}` : `Đánh dấu xong: ${task.title}`}
+            label={done ? tr('Bỏ đánh dấu xong: {title}', { title: task.title }) : tr('Đánh dấu xong: {title}', { title: task.title })}
             onToggle={() =>
               toggle.mutate(task, {
+                onSuccess: () =>
+                  !done &&
+                  notify({
+                    tone: 'success',
+                    message: tr('Đã xong “{title}”', { title: task.title }),
+                    action: { label: tr('Hoàn tác'), onClick: () => toggle.mutate({ ...task, status: 'done' }) },
+                  }),
                 onError: (err) => notify({ tone: 'error', message: err.message }),
               })
             }
@@ -64,7 +72,8 @@ function CardBody({ task, overlay = false }) {
         <PriorityPill priority={task.priority} muted={done} />
         <DueChip task={task} />
         <ChecklistCount checklist={task.checklist} />
-        {task.description && !task.checklist?.length && <AlignLeft className="size-3.5 text-faint" aria-label="Có mô tả" />}
+        <TagChips tags={task.tags} max={2} />
+        {task.description && !task.checklist?.length && <AlignLeft className="size-3.5 text-faint" aria-label={tr('Có mô tả')} />}
       </div>
     </div>
   );
@@ -72,7 +81,10 @@ function CardBody({ task, overlay = false }) {
 
 function SortableCard({ task }) {
   const { openTask } = useUI();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task._id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task._id,
+    attributes: { role: 'listitem', roleDescription: tr('thẻ kéo được') },
+  });
 
   return (
     <li
@@ -85,7 +97,7 @@ function SortableCard({ task }) {
         listeners?.onKeyDown?.(e);
         if (e.key === 'Enter' && !e.defaultPrevented) openTask(task._id);
       }}
-      aria-label={`${task.title}. Nhấn Space để kéo, Enter để mở`}
+      aria-label={tr('{title}. Nhấn Space để kéo, Enter để mở', { title: task.title })}
       className={`cursor-grab touch-manipulation rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-accent active:cursor-grabbing ${
         isDragging ? 'opacity-35' : ''
       }`}
@@ -96,6 +108,12 @@ function SortableCard({ task }) {
 }
 
 /* ---------- Cột ---------- */
+
+const COLUMN_EMPTY = {
+  todo: tr('Chưa có việc nào. Bấm + ở trên hoặc nhấn N để thêm.'),
+  doing: tr('Kéo thẻ vào đây khi bắt tay vào làm.'),
+  done: tr('Việc xong sẽ nằm ở đây. Kéo thẻ sang hoặc tick vào vòng tròn.'),
+};
 
 function Column({ status, ids, tasksById, projectId, index }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -108,22 +126,22 @@ function Column({ status, ids, tasksById, projectId, index }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.08 * index, ease: [0.16, 0.84, 0.24, 1] }}
       className="flex w-[84vw] max-w-[340px] shrink-0 snap-start flex-col rounded-[20px] border border-line bg-surface-2/60 md:w-auto md:max-w-none md:shrink"
-      aria-label={`Cột ${meta.label}`}
+      aria-label={tr('Cột {label}', { label: meta.label })}
     >
       <header className="flex items-center justify-between gap-2 px-4 pt-3.5 pb-2.5">
-        <h3 className="flex items-center gap-2 text-[13px] font-semibold">
+        <h2 className="flex items-center gap-2 text-[13px] font-semibold">
           <span
             className="size-2 rounded-full"
             style={{ background: meta.color, boxShadow: `0 0 0 4px color-mix(in oklab, ${meta.color} 20%, transparent)` }}
           />
           {meta.label}
           <span className="rounded-md bg-surface-3 px-1.5 text-[11px] text-muted tabular-nums">{ids.length}</span>
-        </h3>
+        </h2>
         <button
           type="button"
           onClick={() => setAdding(true)}
           className="grid size-7 place-items-center rounded-lg text-muted hover:bg-surface-3 hover:text-ink"
-          aria-label={`Thêm việc vào cột ${meta.label}`}
+          aria-label={tr('Thêm việc vào cột {label}', { label: meta.label })}
         >
           <Plus className="size-4" />
         </button>
@@ -136,8 +154,8 @@ function Column({ status, ids, tasksById, projectId, index }) {
         >
           {ids.map((id) => tasksById.get(id) && <SortableCard key={id} task={tasksById.get(id)} />)}
           {ids.length === 0 && !adding && (
-            <li className="grid flex-1 place-items-center rounded-2xl border border-dashed border-line px-4 py-6 text-center text-xs text-faint">
-              Kéo thẻ vào đây
+            <li className="grid flex-1 place-items-center rounded-2xl border border-dashed border-line px-4 py-6 text-center text-xs leading-relaxed text-faint">
+              {COLUMN_EMPTY[status]}
             </li>
           )}
         </ul>
@@ -269,7 +287,7 @@ export default function Board({ tasks, allTasks, queryKey, projectId }) {
       { id: active.id, status: to, index, queryKey, apply },
       {
         onSuccess: () => {
-          if (from !== to && to === 'done') notify({ tone: 'success', message: `Đã xong “${task.title}”` });
+          if (from !== to && to === 'done') notify({ tone: 'success', message: tr('Đã xong “{title}”', { title: task.title }) });
         },
         onError: (err) => {
           setItems(null);
@@ -291,7 +309,7 @@ export default function Board({ tasks, allTasks, queryKey, projectId }) {
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
       accessibility={{
-        screenReaderInstructions: { draggable: 'Nhấn Space để nhấc thẻ, dùng phím mũi tên để di chuyển, Space để thả, Esc để huỷ.' },
+        screenReaderInstructions: { draggable: tr('Nhấn Space để nhấc thẻ, dùng phím mũi tên để di chuyển, Space để thả, Esc để huỷ.') },
       }}
     >
       <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">

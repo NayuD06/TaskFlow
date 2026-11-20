@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { formatLongDate, greeting } from '../../lib/dates.js';
 import { firstName, useAuth } from '../auth/AuthContext.jsx';
 import { Card } from '../ui/Motion.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const R = 62; // bán kính quả cầu nước
 const SIZE = 150;
@@ -30,7 +31,7 @@ function FlowOrb({ value = 0, done = 0, total = 0 }) {
 
   return (
     <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Tuần này đã xong ${value}%`}>
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={tr('Tuần này đã xong {value}%', { value })}>
         <defs>
           <clipPath id={`orb-${id}`}>
             <circle cx={SIZE / 2} cy={SIZE / 2} r={R} />
@@ -52,21 +53,20 @@ function FlowOrb({ value = 0, done = 0, total = 0 }) {
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-white">
         <motion.span className="font-display text-[28px] leading-none font-bold tabular-nums drop-shadow-[0_2px_8px_rgb(0_0_0/0.4)]">{label}</motion.span>
-        <span className="mt-1.5 text-[11px] font-medium text-white/75">
-          {done}/{total} việc tuần này
-        </span>
+        <span className="mt-1.5 text-[11px] font-medium text-white/75">{tr('{done}/{total} việc tuần này', { done, total })}</span>
       </div>
     </div>
   );
 }
 
 function summary(stats) {
-  if (!stats) return 'Đang tải số liệu…';
+  if (!stats) return tr('Đang tải số liệu…');
   const parts = [];
-  if (stats.dueToday) parts.push(`${stats.dueToday} việc đến hạn hôm nay`);
-  if (stats.overdue) parts.push(`${stats.overdue} việc đang trễ hạn`);
-  if (!parts.length) return stats.open ? `Bạn còn ${stats.open} việc đang mở, không có gì gấp hôm nay.` : 'Không còn việc nào đang mở. Tận hưởng nhé!';
-  return `Hôm nay có ${parts.join(' và ')}.`;
+  if (stats.dueToday) parts.push(tr('{dueToday} việc đến hạn hôm nay', { dueToday: stats.dueToday }));
+  if (stats.overdue) parts.push(tr('{overdue} việc đang trễ hạn', { overdue: stats.overdue }));
+  if (!parts.length)
+    return stats.open ? tr('Bạn còn {open} việc đang mở, không có gì gấp hôm nay.', { open: stats.open }) : tr('Không còn việc nào đang mở. Tận hưởng nhé!');
+  return tr('Hôm nay có {items}.', { items: parts.join(tr(' và ')) });
 }
 
 export default function HeroCard({ data }) {
@@ -102,7 +102,7 @@ export default function HeroCard({ data }) {
               className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-semibold text-[#06143a] hover:bg-white/90"
             >
               <CalendarCheck className="size-4" aria-hidden="true" />
-              Lên kế hoạch hôm nay
+              {tr('Lên kế hoạch hôm nay')}
             </Link>
             {data?.stats.overdue > 0 && (
               <Link
@@ -110,7 +110,7 @@ export default function HeroCard({ data }) {
                 className="inline-flex h-10 items-center gap-2 rounded-xl bg-white/10 px-4 text-[13px] font-semibold text-white hover:bg-white/15"
               >
                 <TriangleAlert className="size-4 text-[#ff8da0]" aria-hidden="true" />
-                Xem việc trễ hạn
+                {tr('Xem việc trễ hạn')}
               </Link>
             )}
           </div>

@@ -8,6 +8,7 @@ import { useToast } from '../ui/Toasts.jsx';
 import { hueStyle } from '../../lib/constants.js';
 import { LogoMark, LogoWord } from './Logo.jsx';
 import { useUI } from './UIContext.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const fade = {
   initial: { opacity: 0 },
@@ -33,7 +34,7 @@ function NavItem({ to, icon: Icon, label, count, folded, end, onNavigate }) {
           {isActive && (
             <motion.span
               layoutId="nav-pill"
-              className="absolute inset-0 rounded-xl bg-accent shadow-[0_8px_24px_-10px_rgb(47_107_255/0.9)]"
+              className="absolute inset-0 rounded-xl bg-accent shadow-[0_8px_24px_-10px_var(--accent)]"
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
             />
           )}
@@ -43,7 +44,7 @@ function NavItem({ to, icon: Icon, label, count, folded, end, onNavigate }) {
               <motion.span {...fade} className="relative flex min-w-0 flex-1 items-center justify-between gap-2">
                 <span className="truncate">{label}</span>
                 {count !== undefined && (
-                  <span className={`rounded-md px-1.5 text-[11px] tabular-nums ${isActive ? 'bg-white/20' : 'bg-surface-3'}`}>{count}</span>
+                  <span className={`rounded-md px-1.5 text-[11px] tabular-nums ${isActive ? 'bg-black/20' : 'bg-surface-3'}`}>{count}</span>
                 )}
               </motion.span>
             )}
@@ -63,7 +64,7 @@ function UserCard({ folded, onNavigate }) {
       <NavLink
         to="/settings"
         onClick={onNavigate}
-        title={folded ? `${user.name} · Cài đặt tài khoản` : 'Cài đặt tài khoản'}
+        title={folded ? tr('{name} · Cài đặt tài khoản', { name: user.name }) : tr('Cài đặt tài khoản')}
         className={({ isActive }) =>
           `flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-surface-3 ${isActive ? 'bg-surface-3' : ''} ${folded ? 'flex-none' : ''}`
         }
@@ -73,7 +74,7 @@ function UserCard({ folded, onNavigate }) {
           {!folded && (
             <motion.span {...fade} className="min-w-0 leading-tight">
               <span className="block truncate text-[13px] font-semibold text-ink">{user.name}</span>
-              <span className="block truncate text-[11px] text-faint">{user.isDemo ? 'Tài khoản demo' : user.email}</span>
+              <span className="block truncate text-[11px] text-faint">{user.isDemo ? tr('Tài khoản demo') : user.email}</span>
             </motion.span>
           )}
         </AnimatePresence>
@@ -83,11 +84,11 @@ function UserCard({ folded, onNavigate }) {
           type="button"
           onClick={() => {
             logout();
-            notify({ message: 'Đã đăng xuất' });
+            notify({ message: tr('Đã đăng xuất') });
           }}
           className="grid size-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-3 hover:text-ink"
-          aria-label="Đăng xuất"
-          title="Đăng xuất"
+          aria-label={tr('Đăng xuất')}
+          title={tr('Đăng xuất')}
         >
           <LogOut className="size-4" />
         </button>
@@ -110,7 +111,7 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
         animate={{ width: folded ? 76 : 248 }}
         transition={{ duration: 0.45, ease: [0.2, 0.75, 0.2, 1] }}
         className="flex h-full shrink-0 flex-col overflow-hidden rounded-[22px] border border-line bg-surface p-[14px]"
-        aria-label="Điều hướng chính"
+        aria-label={tr('Điều hướng chính')}
       >
         <div className="flex h-10 items-center gap-2.5 px-[6px]">
           <LogoMark size={34} />
@@ -124,9 +125,9 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
         </div>
 
         <nav className="mt-6 space-y-1">
-          <NavItem to="/" end icon={LayoutDashboard} label="Tổng quan" folded={folded} onNavigate={onNavigate} />
-          <NavItem to="/projects" icon={FolderKanban} label="Dự án" count={projects.length} folded={folded} onNavigate={onNavigate} />
-          <NavItem to="/my-tasks" icon={CircleCheckBig} label="Việc của tôi" count={dash?.stats.open} folded={folded} onNavigate={onNavigate} />
+          <NavItem to="/" end icon={LayoutDashboard} label={tr('Tổng quan')} folded={folded} onNavigate={onNavigate} />
+          <NavItem to="/projects" icon={FolderKanban} label={tr('Dự án')} count={projects.length} folded={folded} onNavigate={onNavigate} />
+          <NavItem to="/my-tasks" icon={CircleCheckBig} label={tr('Việc của tôi')} count={dash?.stats.open} folded={folded} onNavigate={onNavigate} />
         </nav>
 
         <div className="mt-7 min-h-0 flex-1 overflow-y-auto">
@@ -134,7 +135,7 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
             <AnimatePresence initial={false}>
               {!folded && (
                 <motion.p {...fade} className="text-xs font-medium text-faint">
-                  Dự án gần đây
+                  {tr('Dự án gần đây')}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -175,11 +176,11 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
               onNavigate?.();
               newProject();
             }}
-            title={folded ? 'Dự án mới' : undefined}
+            title={folded ? tr('Dự án mới') : undefined}
             className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-[11px] text-[13px] font-medium text-muted hover:bg-surface-2 hover:text-ink"
           >
             <Plus className="size-[18px] shrink-0" aria-hidden="true" />
-            <AnimatePresence initial={false}>{!folded && <motion.span {...fade}>Dự án mới</motion.span>}</AnimatePresence>
+            <AnimatePresence initial={false}>{!folded && <motion.span {...fade}>{tr('Dự án mới')}</motion.span>}</AnimatePresence>
           </button>
         </div>
 
@@ -192,8 +193,8 @@ export default function Sidebar({ folded, onToggleFold, onNavigate, mobile = fal
           type="button"
           onClick={onToggleFold}
           className="absolute top-[21px] -right-[13px] z-10 grid size-[26px] place-items-center rounded-full border border-line-strong bg-surface text-muted shadow-[0_4px_12px_-4px_rgb(0_0_0/0.35)] transition-colors hover:border-accent hover:bg-accent hover:text-white"
-          title={folded ? 'Mở rộng thanh bên (Ctrl + B)' : 'Thu gọn thanh bên (Ctrl + B)'}
-          aria-label={folded ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
+          title={folded ? tr('Mở rộng thanh bên (Ctrl + B)') : tr('Thu gọn thanh bên (Ctrl + B)')}
+          aria-label={folded ? tr('Mở rộng thanh bên') : tr('Thu gọn thanh bên')}
           aria-expanded={!folded}
         >
           <motion.span initial={false} animate={{ rotate: folded ? 180 : 0 }} transition={{ duration: 0.35 }} className="grid place-items-center">

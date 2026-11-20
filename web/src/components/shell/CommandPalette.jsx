@@ -1,4 +1,4 @@
-import { CircleCheckBig, CornerDownLeft, FolderKanban, LayoutDashboard, LogOut, Plus, Search, UserRound } from 'lucide-react';
+import { CircleCheckBig, CornerDownLeft, FolderKanban, Keyboard, LayoutDashboard, LogOut, Plus, Search, UserRound } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -7,9 +7,10 @@ import { hueStyle } from '../../lib/constants.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { DueChip } from '../ui/Pills.jsx';
 import { useUI } from './UIContext.jsx';
+import { fold } from '../../lib/text.js';
+import { tr } from '../../lib/i18n.js';
 
-/** Bỏ dấu tiếng Việt để tìm "ban nhap" vẫn ra "bản nháp". */
-const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+/** Tìm không dấu: "ban nhap" vẫn ra "bản nháp". Gõ #nhãn để lọc theo nhãn. */
 
 function Highlight({ text, query }) {
   if (!query) return text;
@@ -25,7 +26,7 @@ function Highlight({ text, query }) {
 }
 
 export default function CommandPalette() {
-  const { paletteOpen, closePalette, openTask, newTask, newProject } = useUI();
+  const { paletteOpen, closePalette, openTask, newTask, newProject, openShortcuts } = useUI();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [query, setQuery] = useState('');
@@ -49,31 +50,37 @@ export default function CommandPalette() {
     if (!q) {
       return [
         {
-          label: 'Đi tới',
+          label: tr('Đi tới'),
           items: [
-            { id: 'g-home', icon: LayoutDashboard, title: 'Tổng quan', run: go('/') },
-            { id: 'g-projects', icon: FolderKanban, title: 'Dự án', run: go('/projects') },
-            { id: 'g-mine', icon: CircleCheckBig, title: 'Việc của tôi', run: go('/my-tasks') },
-            { id: 'g-settings', icon: UserRound, title: 'Cài đặt tài khoản', run: go('/settings') },
+            { id: 'g-home', icon: LayoutDashboard, title: tr('Tổng quan'), run: go('/') },
+            { id: 'g-projects', icon: FolderKanban, title: tr('Dự án'), run: go('/projects') },
+            { id: 'g-mine', icon: CircleCheckBig, title: tr('Việc của tôi'), run: go('/my-tasks') },
+            { id: 'g-settings', icon: UserRound, title: tr('Cài đặt tài khoản'), run: go('/settings') },
           ],
         },
         {
-          label: 'Tạo mới',
+          label: tr('Tạo mới'),
           items: [
-            { id: 'n-task', icon: Plus, title: 'Việc mới', hint: 'N', run: () => newTask() },
-            { id: 'n-project', icon: Plus, title: 'Dự án mới', run: () => newProject() },
+            { id: 'n-task', icon: Plus, title: tr('Việc mới'), hint: 'N', run: () => newTask() },
+            { id: 'n-project', icon: Plus, title: tr('Dự án mới'), run: () => newProject() },
+            { id: 'n-keys', icon: Keyboard, title: tr('Xem phím tắt'), hint: '?', run: () => openShortcuts() },
           ],
         },
         {
-          label: 'Dự án',
+          label: tr('Dự án'),
           items: projects.slice(0, 5).map((p) => ({ id: p._id, project: p, title: p.name, run: go(`/projects/${p._id}`) })),
         },
-        { label: 'Tài khoản', items: [{ id: 'a-logout', icon: LogOut, title: 'Đăng xuất', run: logout }] },
+        { label: tr('Tài khoản'), items: [{ id: 'a-logout', icon: LogOut, title: tr('Đăng xuất'), run: logout }] },
       ];
     }
-    const fq = fold(q);
+    const byTag = q.startsWith('#');
+    const fq = fold(byTag ? q.slice(1) : q);
     const matchedTasks = tasks
-      .filter((t) => fold(t.title).includes(fq) || fold(t.description || '').includes(fq))
+      .filter((t) =>
+        byTag
+          ? (t.tags || []).some((tag) => fold(tag).includes(fq))
+          : fold(t.title).includes(fq) || fold(t.description || '').includes(fq) || (t.tags || []).some((tag) => fold(tag).includes(fq)),
+      )
       .slice(0, 8)
       .map((t) => ({
         id: t._id,
@@ -89,10 +96,10 @@ export default function CommandPalette() {
       .slice(0, 5)
       .map((p) => ({ id: p._id, project: p, title: p.name, run: go(`/projects/${p._id}`) }));
     return [
-      { label: 'Công việc', items: matchedTasks },
-      { label: 'Dự án', items: matchedProjects },
+      { label: tr('Công việc'), items: matchedTasks },
+      { label: tr('Dự án'), items: matchedProjects },
     ].filter((g) => g.items.length);
-  }, [query, tasks, projects, navigate, newTask, newProject, openTask, logout]);
+  }, [query, tasks, projects, navigate, newTask, newProject, openTask, logout, openShortcuts]);
 
   const flat = groups.flatMap((g) => g.items);
 
@@ -137,7 +144,7 @@ export default function CommandPalette() {
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label="Tìm nhanh"
+            aria-label={tr('Tìm nhanh')}
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.12 } }}
@@ -151,7 +158,7 @@ export default function CommandPalette() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Tìm công việc, dự án hoặc lệnh…"
+                placeholder={tr('Tìm công việc, dự án hoặc lệnh…')}
                 className="h-14 flex-1 bg-transparent text-[15px] outline-none placeholder:text-faint"
                 role="combobox"
                 aria-expanded="true"
@@ -161,7 +168,7 @@ export default function CommandPalette() {
             </div>
 
             <div ref={listRef} id="palette-list" role="listbox" className="max-h-[52vh] overflow-y-auto p-2">
-              {flat.length === 0 && <p className="px-3 py-8 text-center text-muted">Không tìm thấy kết quả cho “{query}”.</p>}
+              {flat.length === 0 && <p className="px-3 py-8 text-center text-muted">{tr('Không tìm thấy kết quả cho “{query}”.', { query })}</p>}
               {groups.map((g) => (
                 <div key={g.label} className="mb-1">
                   <p className="px-3 pt-2 pb-1 text-xs font-medium text-faint">{g.label}</p>

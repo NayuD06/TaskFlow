@@ -1,3 +1,5 @@
+import { tr } from './i18n.js';
+
 export const HUES = {
   blue: '#3b82f6',
   sky: '#38bdf8',
@@ -12,16 +14,16 @@ export const HUES = {
 };
 
 export const HUE_NAMES = {
-  blue: 'Xanh dương',
-  sky: 'Xanh trời',
-  cyan: 'Lam ngọc',
-  teal: 'Xanh két',
-  green: 'Xanh lá',
-  amber: 'Hổ phách',
-  orange: 'Cam',
-  rose: 'Hồng',
-  violet: 'Tím',
-  indigo: 'Chàm',
+  blue: tr('Xanh dương'),
+  sky: tr('Xanh trời'),
+  cyan: tr('Lam ngọc'),
+  teal: tr('Xanh két'),
+  green: tr('Xanh lá'),
+  amber: tr('Hổ phách'),
+  orange: tr('Cam'),
+  rose: tr('Hồng'),
+  violet: tr('Tím'),
+  indigo: tr('Chàm'),
 };
 
 export const hueOf = (color) => HUES[color] || HUES.blue;
@@ -29,22 +31,26 @@ export const hueStyle = (color) => ({ '--hue': hueOf(color) });
 
 export const STATUSES = ['todo', 'doing', 'done'];
 export const STATUS = {
-  todo: { label: 'Cần làm', short: 'Cần làm', tone: 'tone-muted', color: '#8a96b3' },
-  doing: { label: 'Đang làm', short: 'Đang làm', tone: 'tone-accent', color: '#2f6bff' },
-  done: { label: 'Đã xong', short: 'Xong', tone: 'tone-success', color: '#22c38e' },
+  todo: { label: tr('Cần làm'), short: tr('Cần làm'), tone: 'tone-muted', color: '#8a96b3' },
+  doing: { label: tr('Đang làm'), short: tr('Đang làm'), tone: 'tone-accent', color: '#2f6bff' },
+  done: { label: tr('Đã xong'), short: tr('Xong'), tone: 'tone-success', color: '#22c38e' },
 };
 
 export const PRIORITIES = ['urgent', 'high', 'medium', 'low'];
 export const PRIORITY = {
-  urgent: { label: 'Khẩn cấp', tone: 'tone-danger', color: '#ff4d6a' },
-  high: { label: 'Cao', tone: 'tone-warning', color: '#fb923c' },
-  medium: { label: 'Vừa', tone: 'tone-accent', color: '#6b95ff' },
-  low: { label: 'Thấp', tone: 'tone-muted', color: '#8a96b3' },
+  urgent: { label: tr('Khẩn cấp'), tone: 'tone-danger', color: '#ff4d6a' },
+  high: { label: tr('Cao'), tone: 'tone-warning', color: '#fb923c' },
+  medium: { label: tr('Vừa'), tone: 'tone-accent', color: '#6b95ff' },
+  low: { label: tr('Thấp'), tone: 'tone-muted', color: '#8a96b3' },
 };
 
 export const SORT_OPTIONS = [
-  { value: 'board', label: 'Thứ tự trên bảng' },
-  { value: 'deadline', label: 'Hạn gần nhất' },
-  { value: 'priority', label: 'Ưu tiên cao trước' },
-  { value: 'newest', label: 'Mới thêm' },
+  { value: 'board', label: tr('Thứ tự trên bảng') },
+  { value: 'deadline', label: tr('Hạn gần nhất') },
+  { value: 'priority', label: tr('Ưu tiên cao trước') },
+  { value: 'newest', label: tr('Mới thêm') },
 ];
+
+/** Ảnh đại diện có sẵn (phải khớp AVATAR_EMOJIS ở api/src/models/User.js). */
+export const AVATAR_EMOJIS = ['🐳', '🐬', '🐙', '🦈', '🐢', '🦦', '🐧', '🦀', '🐠', '🪼', '🐋', '🦭'];
+export const AVATAR_MAX_LENGTH = 60_000;

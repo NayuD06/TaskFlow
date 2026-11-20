@@ -3,6 +3,7 @@ import { useId, useMemo, useState } from 'react';
 import { WEEKDAYS, shortDate } from '../../lib/dates.js';
 import { Card } from '../ui/Motion.jsx';
 import Segmented from '../ui/Segmented.jsx';
+import { tr } from '../../lib/i18n.js';
 
 const W = 640;
 const H = 200;
@@ -49,25 +50,24 @@ export default function Throughput({ daily = [] }) {
     <Card className="p-5 lg:col-span-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-[15px] font-bold">Nhịp hoàn thành</h2>
+          <h2 className="font-display text-[15px] font-bold">{tr('Nhịp hoàn thành')}</h2>
           <p className="mt-1 text-[13px] text-muted">
-            <span className="font-semibold text-ink">{total} việc</span> trong {range} ngày
+            <span className="font-semibold text-ink">{tr('{n} việc', { n: total })}</span> {tr('trong {n} ngày', { n: range })}
             {change !== null && (
               <span className={`ml-2 rounded-md px-1.5 py-0.5 text-xs font-semibold ${change >= 0 ? 'tone-success' : 'tone-danger'}`}>
-                {change >= 0 ? '+' : ''}
-                {change}% so với kỳ trước
+                {tr('{change}% so với kỳ trước', { change: `${change >= 0 ? '+' : ''}${change}` })}
               </span>
             )}
           </p>
         </div>
         <Segmented
           size="sm"
-          label="Khoảng thời gian"
+          label={tr('Khoảng thời gian')}
           value={range}
           onChange={setRange}
           options={[
-            { value: 7, label: '7 ngày' },
-            { value: 14, label: '14 ngày' },
+            { value: 7, label: tr('7 ngày') },
+            { value: 14, label: tr('14 ngày') },
           ]}
         />
       </div>
@@ -79,7 +79,7 @@ export default function Throughput({ daily = [] }) {
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
           role="img"
-          aria-label={`Biểu đồ số việc hoàn thành mỗi ngày trong ${range} ngày, tổng ${total}`}
+          aria-label={tr('Biểu đồ số việc hoàn thành mỗi ngày trong {range} ngày, tổng {total}', { range, total })}
         >
           <defs>
             <linearGradient id={`tp-${id}`} x1="0" x2="0" y1="0" y2="1">
@@ -160,8 +160,13 @@ export default function Throughput({ daily = [] }) {
               {WEEKDAYS[(days[hover].getDay() + 6) % 7]}, {shortDate(days[hover])}
             </p>
             <p className="mt-0.5 text-muted">
-              <span className="font-semibold text-accent-hi">{current[hover]}</span> việc xong
-              {previous[hover] !== undefined && <span> · kỳ trước {previous[hover]}</span>}
+              <span className="font-semibold text-accent-hi">{current[hover]}</span> {tr('việc xong', { n: current[hover] })}
+              {previous[hover] !== undefined && (
+                <span>
+                  {' '}
+                  {tr('· kỳ trước')} {previous[hover]}
+                </span>
+              )}
             </p>
           </div>
         )}

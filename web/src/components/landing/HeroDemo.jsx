@@ -2,21 +2,22 @@ import { LayoutGroup, motion, useInView, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
 import { CountUp } from '../ui/Motion.jsx';
+import { tr } from '../../lib/i18n.js';
 
 // Dữ liệu minh hoạ, không gọi API
 const SEED = [
-  { id: 'a', title: 'Viết chương 3: Thiết kế', tag: 'Khẩn cấp', tone: 'danger', due: 'Hôm nay', status: 'doing', at: 1 },
-  { id: 'b', title: 'Vẽ sơ đồ cơ sở dữ liệu', tag: 'Cao', tone: 'warning', due: 'Mai', status: 'doing', at: 2 },
-  { id: 'c', title: 'Gửi bản nháp cho thầy', tag: 'Vừa', tone: 'accent', due: 'Thứ 6', status: 'todo', at: 3 },
-  { id: 'd', title: 'Làm slide bảo vệ', tag: 'Cao', tone: 'warning', due: '28/11', status: 'todo', at: 4 },
-  { id: 'e', title: 'Khảo sát người dùng', tag: 'Thấp', tone: 'muted', due: null, status: 'done', at: 2 },
-  { id: 'f', title: 'Chốt đề tài với thầy', tag: 'Vừa', tone: 'accent', due: null, status: 'done', at: 1 },
+  { id: 'a', title: tr('Viết chương 3: Thiết kế'), tag: tr('Khẩn cấp'), tone: 'danger', due: tr('Hôm nay'), status: 'doing', at: 1 },
+  { id: 'b', title: tr('Vẽ sơ đồ cơ sở dữ liệu'), tag: tr('Cao'), tone: 'warning', due: tr('Mai'), status: 'doing', at: 2 },
+  { id: 'c', title: tr('Gửi bản nháp cho thầy'), tag: tr('Vừa'), tone: 'accent', due: tr('Thứ 6'), status: 'todo', at: 3 },
+  { id: 'd', title: tr('Làm slide bảo vệ'), tag: tr('Cao'), tone: 'warning', due: tr('28/11'), status: 'todo', at: 4 },
+  { id: 'e', title: tr('Khảo sát người dùng'), tag: tr('Thấp'), tone: 'muted', due: null, status: 'done', at: 2 },
+  { id: 'f', title: tr('Chốt đề tài với thầy'), tag: tr('Vừa'), tone: 'accent', due: null, status: 'done', at: 1 },
 ];
 
 const COLUMNS = [
-  { key: 'todo', label: 'Cần làm', dot: 'var(--faint)', className: 'hidden sm:block' },
-  { key: 'doing', label: 'Đang làm', dot: 'var(--warning)', className: '' },
-  { key: 'done', label: 'Đã xong', dot: 'var(--success)', className: '' },
+  { key: 'todo', label: tr('Cần làm'), dot: 'var(--faint)', className: 'hidden sm:block' },
+  { key: 'doing', label: tr('Đang làm'), dot: 'var(--warning)', className: '' },
+  { key: 'done', label: tr('Đã xong'), dot: 'var(--success)', className: '' },
 ];
 
 const WAVE = `M0 10 Q 25 2 50 10 ${Array.from({ length: 15 }, (_, i) => `T ${100 + i * 50} 10`).join(' ')} V 40 H 0 Z`;
@@ -93,11 +94,11 @@ export default function HeroDemo() {
             <span className="size-2.5 rounded-full bg-[#28c840]" />
           </div>
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-accent/15 font-display text-[10px] font-bold text-accent-hi">Đ</span>
-            <span className="truncate text-[13px] font-semibold">Đồ án tốt nghiệp</span>
+            <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-accent/15 font-display text-[10px] font-bold text-accent-hi">{tr('Đ')}</span>
+            <span className="truncate text-[13px] font-semibold">{tr('Đồ án tốt nghiệp')}</span>
           </div>
           <span className="rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent-hi">
-            <CountUp value={progress} suffix="%" duration={0.8} /> xong
+            <CountUp value={progress} suffix="%" duration={0.8} /> {tr('xong')}
           </span>
         </div>
 

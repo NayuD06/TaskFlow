@@ -1,5 +1,5 @@
 import { CalendarClock, ListChecks } from 'lucide-react';
-import { PRIORITY, STATUS, hueStyle } from '../../lib/constants.js';
+import { HUES, PRIORITY, STATUS, hueStyle } from '../../lib/constants.js';
 import { describeDeadline } from '../../lib/dates.js';
 
 const base = 'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap';
@@ -70,6 +70,50 @@ export function ProjectTile({ project, size = 36, className = '' }) {
       aria-hidden="true"
     >
       {letter}
+    </span>
+  );
+}
+
+const HUE_KEYS = Object.keys(HUES);
+/** Mỗi nhãn luôn ra cùng một màu (băm tên nhãn). */
+export function tagHue(name = '') {
+  let h = 0;
+  for (const ch of name.toLowerCase()) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return HUE_KEYS[h % HUE_KEYS.length];
+}
+
+export function TagChip({ name, className = '', children }) {
+  return (
+    <span
+      className={`tag-chip inline-flex max-w-36 items-center gap-0.5 rounded-md px-1.5 py-px text-[11px] font-medium ${className}`}
+      style={hueStyle(tagHue(name))}
+    >
+      <span className="truncate">#{name}</span>
+      {children}
+    </span>
+  );
+}
+
+/** Dãy nhãn gọn: hiện tối đa `max` nhãn, phần còn lại gộp thành +n. */
+export function TagChips({ tags = [], max = 3 }) {
+  if (!tags?.length) return null;
+  const rest = tags.length - max;
+  return (
+    <span className="inline-flex min-w-0 flex-wrap items-center gap-1">
+      {tags.slice(0, max).map((t) => (
+        <TagChip key={t} name={t} />
+      ))}
+      {rest > 0 && (
+        <span
+          className="text-[11px] font-medium text-faint"
+          title={tags
+            .slice(max)
+            .map((t) => `#${t}`)
+            .join(' ')}
+        >
+          +{rest}
+        </span>
+      )}
     </span>
   );
 }

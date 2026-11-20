@@ -1,5 +1,6 @@
 // Kiểm tra dữ liệu đầu vào cho tài khoản. Ném lỗi 400 kèm lỗi từng trường để form hiển thị.
 import { PROJECT_COLORS } from '../models/Project.js';
+import { AVATAR_EMOJIS, AVATAR_MAX_LENGTH } from '../models/User.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -55,6 +56,17 @@ export function validateLogin(body = {}) {
   return data;
 }
 
+// Chỉ nhận ảnh raster nhỏ (không nhận SVG vì có thể chứa mã), hoặc emoji trong danh sách có sẵn
+const DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+function avatarProblem(value) {
+  if (typeof value !== 'string') return 'Ảnh đại diện không hợp lệ';
+  if (value === '') return null;
+  if (value.startsWith('emoji:')) return AVATAR_EMOJIS.includes(value.slice(6)) ? null : 'Ảnh đại diện không hợp lệ';
+  if (value.length > AVATAR_MAX_LENGTH) return 'Ảnh quá lớn, hãy chọn ảnh khác';
+  return DATA_URL.test(value) ? null : 'Ảnh đại diện không hợp lệ';
+}
+
 export function validateProfile(body = {}) {
   const data = {};
   const fields = {};
@@ -65,6 +77,15 @@ export function validateProfile(body = {}) {
   if (body.avatarColor !== undefined) {
     if (!PROJECT_COLORS.includes(body.avatarColor)) fields.avatarColor = 'Màu không hợp lệ';
     else data.avatarColor = body.avatarColor;
+  }
+  if (body.accentColor !== undefined) {
+    if (!PROJECT_COLORS.includes(body.accentColor)) fields.accentColor = 'Màu không hợp lệ';
+    else data.accentColor = body.accentColor;
+  }
+  if (body.avatar !== undefined) {
+    const problem = avatarProblem(body.avatar);
+    if (problem) fields.avatar = problem;
+    else data.avatar = body.avatar;
   }
   if (Object.keys(fields).length) throw invalid(fields);
   return data;

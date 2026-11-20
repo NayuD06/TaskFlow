@@ -2,6 +2,7 @@ import { Check, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { forwardRef, useId, useState } from 'react';
 import { hueOf } from '../../lib/constants.js';
+import { tr } from '../../lib/i18n.js';
 
 const inputBase =
   'h-11 w-full rounded-xl border bg-surface-2/60 px-3.5 text-[14px] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-faint disabled:cursor-not-allowed disabled:opacity-60';
@@ -59,7 +60,7 @@ export const TextField = forwardRef(function TextField({ label, error, hint, asi
   );
 });
 
-export const PasswordField = forwardRef(function PasswordField({ label = 'Mật khẩu', error, hint, aside, children, ...props }, ref) {
+export const PasswordField = forwardRef(function PasswordField({ label = tr('Mật khẩu'), error, hint, aside, children, ...props }, ref) {
   const id = useId();
   const [show, setShow] = useState(false);
   return (
@@ -78,7 +79,7 @@ export const PasswordField = forwardRef(function PasswordField({ label = 'Mật 
           type="button"
           onClick={() => setShow((v) => !v)}
           className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-faint hover:bg-surface-3 hover:text-ink"
-          aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+          aria-label={show ? tr('Ẩn mật khẩu') : tr('Hiện mật khẩu')}
           aria-pressed={show}
         >
           {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -101,11 +102,11 @@ export function scorePassword(pw = '') {
 }
 
 const LEVELS = [
-  { label: 'Quá ngắn', color: 'var(--danger)' },
-  { label: 'Yếu', color: 'var(--danger)' },
-  { label: 'Tạm được', color: 'var(--warning)' },
-  { label: 'Khá', color: 'var(--accent-hi)' },
-  { label: 'Mạnh', color: 'var(--success)' },
+  { label: tr('Quá ngắn'), color: 'var(--danger)' },
+  { label: tr('Yếu'), color: 'var(--danger)' },
+  { label: tr('Tạm được'), color: 'var(--warning)' },
+  { label: tr('Khá'), color: 'var(--accent-hi)' },
+  { label: tr('Mạnh'), color: 'var(--success)' },
 ];
 
 /** Thanh độ mạnh dạng "ống nước" + 3 điều kiện bắt buộc. */
@@ -113,9 +114,9 @@ export function PasswordStrength({ password }) {
   const score = scorePassword(password);
   const level = LEVELS[score];
   const rules = [
-    { ok: password.length >= 8, text: 'Ít nhất 8 ký tự' },
-    { ok: /\p{L}/u.test(password), text: 'Có chữ cái' },
-    { ok: /\d/.test(password), text: 'Có chữ số' },
+    { ok: password.length >= 8, text: tr('Ít nhất 8 ký tự') },
+    { ok: /\p{L}/u.test(password), text: tr('Có chữ cái') },
+    { ok: /\d/.test(password), text: tr('Có chữ số') },
   ];
   return (
     <div className="mt-2.5" aria-live="polite">
@@ -128,7 +129,7 @@ export function PasswordStrength({ password }) {
           />
         </div>
         <span className="w-16 text-right text-[11px] font-semibold" style={{ color: password ? level.color : 'var(--faint)' }}>
-          {password ? level.label : 'Độ mạnh'}
+          {password ? level.label : tr('Độ mạnh')}
         </span>
       </div>
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -145,8 +146,21 @@ export function PasswordStrength({ password }) {
   );
 }
 
-/** Ô tròn chữ cái đầu tên, tô theo màu người dùng chọn. */
+/** Ảnh đại diện: ảnh tải lên, emoji ("emoji:🐳") hoặc chữ cái cuối của tên trên nền màu. */
 export function Avatar({ user, size = 36, className = '' }) {
+  const avatar = user?.avatar || '';
+  if (avatar.startsWith('data:image/'))
+    return (
+      <img
+        src={avatar}
+        alt=""
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ring-1 ring-line-strong ${className}`}
+        style={{ width: size, height: size }}
+      />
+    );
+  const emoji = avatar.startsWith('emoji:') ? avatar.slice(6) : '';
   const letter = (user?.name || '?').trim().split(/\s+/).pop().charAt(0).toUpperCase();
   return (
     <span
@@ -155,12 +169,12 @@ export function Avatar({ user, size = 36, className = '' }) {
         '--hue': hueOf(user?.avatarColor),
         width: size,
         height: size,
-        fontSize: size * 0.4,
+        fontSize: size * (emoji ? 0.52 : 0.4),
         background: 'linear-gradient(145deg, color-mix(in oklab, var(--hue) 90%, white), color-mix(in oklab, var(--hue) 70%, black))',
       }}
       aria-hidden="true"
     >
-      {letter}
+      {emoji ? <span className="leading-none">{emoji}</span> : letter}
     </span>
   );
 }

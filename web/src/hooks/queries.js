@@ -33,6 +33,9 @@ export const useTask = (id) => {
   });
 };
 
+/** Các nhãn đã dùng, kèm số việc: [{ name, count }] */
+export const useTags = () => useQuery({ queryKey: ['tags'], queryFn: api.tasks.tags, staleTime: 60_000 });
+
 export const useDashboard = () => useQuery({ queryKey: ['dashboard'], queryFn: api.dashboard });
 
 export const useActivity = (type = 'all') =>

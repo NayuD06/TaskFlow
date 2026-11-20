@@ -15,14 +15,14 @@ import { useDeleteProject, useProjects, useSaveProject } from '../hooks/queries.
 import { hueOf, hueStyle } from '../lib/constants.js';
 import { relativeTime } from '../lib/dates.js';
 import { usePersistentState } from '../lib/theme.js';
-
-const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
+import { fold } from '../lib/text.js';
+import { tr } from '../lib/i18n.js';
 
 const SORTS = {
-  recent: { label: 'Mới cập nhật', fn: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt) },
-  open: { label: 'Nhiều việc mở', fn: (a, b) => b.stats.open - a.stats.open },
-  progress: { label: 'Tiến độ cao', fn: (a, b) => b.stats.progress - a.stats.progress },
-  name: { label: 'Tên A đến Z', fn: (a, b) => a.name.localeCompare(b.name, 'vi') },
+  recent: { label: tr('Mới cập nhật'), fn: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt) },
+  open: { label: tr('Nhiều việc mở'), fn: (a, b) => b.stats.open - a.stats.open },
+  progress: { label: tr('Tiến độ cao'), fn: (a, b) => b.stats.progress - a.stats.progress },
+  name: { label: tr('Tên A đến Z'), fn: (a, b) => a.name.localeCompare(b.name, 'vi') },
 };
 
 function ProjectCard({ project, onArchive, onDelete }) {
@@ -43,14 +43,14 @@ function ProjectCard({ project, onArchive, onDelete }) {
       <WaterCover progress={s.progress} height={84} />
       <div className="absolute top-3 right-3 z-10">
         <Menu
-          label={`Tuỳ chọn cho ${project.name}`}
+          label={tr('Tuỳ chọn cho {name}', { name: project.name })}
           trigger={<MoreHorizontal className="size-4" />}
           items={[
-            { label: 'Sửa', icon: Pencil, onClick: () => editProject(project) },
+            { label: tr('Sửa'), icon: Pencil, onClick: () => editProject(project) },
             project.archived
-              ? { label: 'Khôi phục', icon: ArchiveRestore, onClick: () => onArchive(project, false) }
-              : { label: 'Lưu trữ', icon: Archive, onClick: () => onArchive(project, true) },
-            { label: 'Xoá dự án', icon: Trash2, danger: true, onClick: () => onDelete(project) },
+              ? { label: tr('Khôi phục'), icon: ArchiveRestore, onClick: () => onArchive(project, false) }
+              : { label: tr('Lưu trữ'), icon: Archive, onClick: () => onArchive(project, true) },
+            { label: tr('Xoá dự án'), icon: Trash2, danger: true, onClick: () => onDelete(project) },
           ]}
         />
       </div>
@@ -59,29 +59,35 @@ function ProjectCard({ project, onArchive, onDelete }) {
         <span className="-mt-6 w-fit rounded-[16px] border-4 border-surface bg-surface">
           <ProjectTile project={project} size={44} className="!rounded-[12px]" />
         </span>
-        <h3 className="mt-3 truncate font-display text-[15px] font-bold group-hover:text-[color-mix(in_oklab,var(--hue)_70%,var(--ink))]">{project.name}</h3>
-        <p className="mt-1 line-clamp-2 min-h-[2lh] text-[13px] leading-relaxed text-muted">{project.description || 'Chưa có mô tả.'}</p>
+        <h2 className="mt-3 truncate font-display text-[15px] font-bold group-hover:text-[color-mix(in_oklab,var(--hue)_70%,var(--ink))]">{project.name}</h2>
+        <p className="mt-1 line-clamp-2 min-h-[2lh] text-[13px] leading-relaxed text-muted">{project.description || tr('Chưa có mô tả.')}</p>
 
         <div className="mt-4 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-          <span className="tone-muted rounded-full px-2 py-0.5">{s.open} đang mở</span>
-          {s.doing > 0 && <span className="tone-accent rounded-full px-2 py-0.5">{s.doing} đang làm</span>}
+          <span className="tone-muted rounded-full px-2 py-0.5">
+            {s.open} {tr('đang mở')}
+          </span>
+          {s.doing > 0 && (
+            <span className="tone-accent rounded-full px-2 py-0.5">
+              {s.doing} {tr('đang làm')}
+            </span>
+          )}
           {s.overdue > 0 && (
             <span className="tone-danger inline-flex items-center gap-1 rounded-full px-2 py-0.5">
               <TriangleAlert className="size-3" aria-hidden="true" />
-              {s.overdue} trễ hạn
+              {s.overdue} {tr('trễ hạn')}
             </span>
           )}
         </div>
 
         <div className="mt-auto pt-4">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">
-              {s.done}/{s.total} việc xong
-            </span>
+            <span className="text-muted">{tr('{done}/{total} việc xong', { done: s.done, total: s.total })}</span>
             <span className="font-display font-bold tabular-nums">{s.progress}%</span>
           </div>
           <ProgressBar value={s.progress} color={hueOf(project.color)} className="mt-1.5 h-1.5" />
-          <p className="mt-3 text-[11px] text-faint">Cập nhật {relativeTime(project.updatedAt)}</p>
+          <p className="mt-3 text-[11px] text-faint">
+            {tr('Cập nhật')} {relativeTime(project.updatedAt)}
+          </p>
         </div>
       </Link>
     </motion.article>
@@ -113,8 +119,8 @@ export default function Projects() {
       {
         onSuccess: () =>
           notify({
-            message: value ? `Đã lưu trữ “${project.name}”` : `Đã khôi phục “${project.name}”`,
-            action: { label: 'Hoàn tác', onClick: () => save.mutate({ id: project._id, data: { archived: !value } }) },
+            message: value ? tr('Đã lưu trữ “{name}”', { name: project.name }) : tr('Đã khôi phục “{name}”', { name: project.name }),
+            action: { label: tr('Hoàn tác'), onClick: () => save.mutate({ id: project._id, data: { archived: !value } }) },
           }),
         onError: (err) => notify({ tone: 'error', message: err.message }),
       },
@@ -122,7 +128,7 @@ export default function Projects() {
 
   const onDelete = (project) =>
     remove.mutate(project._id, {
-      onSuccess: (res) => notify({ message: `Đã xoá “${project.name}” cùng ${res.deletedTasks} công việc` }),
+      onSuccess: (res) => notify({ message: tr('Đã xoá “{name}” cùng {deletedTasks} công việc', { name: project.name, deletedTasks: res.deletedTasks }) }),
       onError: (err) => notify({ tone: 'error', message: err.message }),
     });
 
@@ -132,42 +138,42 @@ export default function Projects() {
     <RisePage className="space-y-4">
       <motion.div variants={riseItem} className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Dự án</h1>
-          <p className="mt-1 text-[13px] text-muted">Mỗi dự án là một bể nước. Xong càng nhiều việc, nước càng dâng cao.</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight">{tr('Dự án')}</h1>
+          <p className="mt-1 text-[13px] text-muted">{tr('Mỗi dự án là một bể nước. Xong càng nhiều việc, nước càng dâng cao.')}</p>
         </div>
         <button
           type="button"
           onClick={newProject}
           className="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_var(--accent)] hover:brightness-110"
         >
-          <Plus className="size-4" aria-hidden="true" /> Dự án mới
+          <Plus className="size-4" aria-hidden="true" /> {tr('Dự án mới')}
         </button>
       </motion.div>
 
       <motion.div variants={riseItem} className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-surface p-2 sm:flex-row sm:items-center">
         <Segmented
-          label="Lọc dự án"
+          label={tr('Lọc dự án')}
           value={tab}
           onChange={setTab}
           options={[
-            { value: 'false', label: 'Đang chạy', count: active.length },
-            { value: 'true', label: 'Lưu trữ', count: archived.length },
+            { value: 'false', label: tr('Đang chạy'), count: active.length },
+            { value: 'true', label: tr('Lưu trữ'), count: archived.length },
           ]}
         />
         <label className="relative flex-1">
-          <span className="sr-only">Tìm dự án</span>
+          <span className="sr-only">{tr('Tìm dự án')}</span>
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm theo tên hoặc mô tả"
+            placeholder={tr('Tìm theo tên hoặc mô tả')}
             className="h-10 w-full rounded-xl bg-surface-2 pr-9 pl-9 text-[13px] outline-none placeholder:text-faint focus:ring-2 focus:ring-accent/50"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label="Xoá tìm kiếm"
+              aria-label={tr('Xoá tìm kiếm')}
               className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-faint hover:text-ink"
             >
               <X className="size-3.5" />
@@ -175,7 +181,7 @@ export default function Projects() {
           )}
         </label>
         <label className="flex items-center gap-2 text-[13px] text-muted">
-          <span className="shrink-0 max-sm:sr-only">Sắp xếp</span>
+          <span className="shrink-0 max-sm:sr-only">{tr('Sắp xếp')}</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -215,7 +221,7 @@ export default function Projects() {
                 <span className="grid size-12 place-items-center rounded-2xl bg-surface-2 transition-transform group-hover:scale-110 group-hover:rotate-90">
                   <Plus className="size-5" aria-hidden="true" />
                 </span>
-                <span className="text-[13px] font-semibold">Tạo dự án mới</span>
+                <span className="text-[13px] font-semibold">{tr('Tạo dự án mới')}</span>
               </motion.button>
             )}
           </AnimatePresence>
@@ -225,8 +231,8 @@ export default function Projects() {
       {!isLoading && shown.length === 0 && (query || tab === 'true') && (
         <EmptyState
           icon={query ? Search : FolderOpen}
-          title={query ? 'Không tìm thấy dự án' : 'Chưa có dự án lưu trữ'}
-          body={query ? `Không có dự án nào khớp với “${query}”.` : 'Dự án bạn lưu trữ sẽ nằm ở đây, có thể khôi phục bất cứ lúc nào.'}
+          title={query ? tr('Không tìm thấy dự án') : tr('Chưa có dự án lưu trữ')}
+          body={query ? tr('Không có dự án nào khớp với “{query}”.', { query }) : tr('Dự án bạn lưu trữ sẽ nằm ở đây, có thể khôi phục bất cứ lúc nào.')}
         />
       )}
 
@@ -234,9 +240,9 @@ export default function Projects() {
         open={!!confirm}
         onClose={() => setConfirm(null)}
         onConfirm={() => onDelete(confirm)}
-        title={`Xoá dự án “${confirm?.name}”?`}
-        body={`Toàn bộ ${confirm?.stats.total ?? 0} công việc trong dự án cũng sẽ bị xoá và không thể khôi phục.`}
-        confirmLabel="Xoá vĩnh viễn"
+        title={tr('Xoá dự án “{name}”?', { name: confirm?.name })}
+        body={tr('Toàn bộ {total} công việc trong dự án cũng sẽ bị xoá và không thể khôi phục.', { total: confirm?.stats.total ?? 0 })}
+        confirmLabel={tr('Xoá vĩnh viễn')}
       />
     </RisePage>
   );

@@ -1,15 +1,19 @@
+import { lang, locale, tr } from './i18n.js';
+
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 
 const pad = (n) => String(n).padStart(2, '0');
-const timeFmt = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' });
-const longDateFmt = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
-const monthFmt = new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' });
+const timeFmt = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' });
+const longDateFmt = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+const monthFmt = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+const shortEn = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
-export const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+export const WEEKDAYS = lang === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
-export const shortDate = (d) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+/** Ngày ngắn: 20/11 (tiếng Việt) hoặc Nov 20 (tiếng Anh). */
+export const shortDate = (d) => (lang === 'en' ? shortEn.format(d) : `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`);
 export const formatTime = (d) => timeFmt.format(new Date(d));
 
 export function startOfDay(date) {
@@ -50,13 +54,13 @@ export function describeDeadline(task, now = new Date()) {
   const diff = deadline - now;
   if (diff < 0) {
     const late = -diff;
-    if (late < HOUR) return { label: `Trễ ${Math.max(1, Math.round(late / MINUTE))} phút`, tone: 'tone-danger' };
-    if (late < DAY) return { label: `Trễ ${Math.round(late / HOUR)} giờ`, tone: 'tone-danger' };
-    return { label: `Trễ ${Math.round(late / DAY)} ngày`, tone: 'tone-danger' };
+    if (late < HOUR) return { label: tr('Trễ {n} phút', { n: Math.max(1, Math.round(late / MINUTE)) }), tone: 'tone-danger' };
+    if (late < DAY) return { label: tr('Trễ {n} giờ', { n: Math.round(late / HOUR) }), tone: 'tone-danger' };
+    return { label: tr('Trễ {n} ngày', { n: Math.round(late / DAY) }), tone: 'tone-danger' };
   }
   const days = dayDiff(deadline, now);
-  if (days === 0) return { label: `Hôm nay ${time}`, tone: 'tone-warning' };
-  if (days === 1) return { label: `Mai ${time}`, tone: 'tone-accent' };
+  if (days === 0) return { label: tr('Hôm nay {time}', { time }), tone: 'tone-warning' };
+  if (days === 1) return { label: tr('Mai {time}', { time }), tone: 'tone-accent' };
   if (days < 7) return { label: `${WEEKDAYS[(deadline.getDay() + 6) % 7]}, ${shortDate(deadline)}`, tone: 'tone-muted' };
   return { label: shortDate(deadline), tone: 'tone-muted' };
 }
@@ -73,27 +77,27 @@ export function formatMonth(date) {
 
 export function greeting(date = new Date()) {
   const h = date.getHours();
-  if (h < 5) return 'Khuya rồi';
-  if (h < 11) return 'Chào buổi sáng';
-  if (h < 13) return 'Chào buổi trưa';
-  if (h < 18) return 'Chào buổi chiều';
-  return 'Chào buổi tối';
+  if (h < 5) return tr('Khuya rồi');
+  if (h < 11) return tr('Chào buổi sáng');
+  if (h < 13) return tr('Chào buổi trưa');
+  if (h < 18) return tr('Chào buổi chiều');
+  return tr('Chào buổi tối');
 }
 
 export function relativeTime(date, now = new Date()) {
   const diff = now - new Date(date);
-  if (diff < MINUTE) return 'vừa xong';
-  if (diff < HOUR) return `${Math.round(diff / MINUTE)} phút trước`;
-  if (diff < DAY) return `${Math.round(diff / HOUR)} giờ trước`;
+  if (diff < MINUTE) return tr('vừa xong');
+  if (diff < HOUR) return tr('{n} phút trước', { n: Math.round(diff / MINUTE) });
+  if (diff < DAY) return tr('{n} giờ trước', { n: Math.round(diff / HOUR) });
   const days = Math.round(diff / DAY);
-  if (days < 30) return `${days} ngày trước`;
+  if (days < 30) return tr('{n} ngày trước', { n: days });
   return shortDate(new Date(date));
 }
 
 export function dayLabel(date, now = new Date()) {
   const d = dayDiff(date, now);
-  if (d === 0) return 'Hôm nay';
-  if (d === -1) return 'Hôm qua';
+  if (d === 0) return tr('Hôm nay');
+  if (d === -1) return tr('Hôm qua');
   const dt = new Date(date);
   return `${WEEKDAYS[(dt.getDay() + 6) % 7]}, ${shortDate(dt)}`;
 }
