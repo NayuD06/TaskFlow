@@ -1,0 +1,193 @@
+@import 'tailwindcss';
+
+/*
+ * Bảng màu dùng biến CSS để đổi qua lại giữa tối (mặc định) và sáng.
+ * Tailwind sinh class như bg-surface, text-muted, border-line từ các token dưới.
+ */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-hi: var(--accent-hi);
+  --color-accent-soft: var(--accent-soft);
+  --color-hero: var(--hero);
+  --color-rail: var(--rail);
+  --color-rail-ink: var(--rail-ink);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-display: 'Unbounded', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #04060b;
+  --surface: #0b101b;
+  --surface-2: #111827;
+  --surface-3: #18213a;
+  --line: #1a2336;
+  --line-strong: #27324c;
+  --ink: #e8eef9;
+  --muted: #8a96b3;
+  --faint: #5b6684;
+  --accent: #2f6bff;
+  --accent-hi: #6b95ff;
+  --accent-soft: rgb(47 107 255 / 0.15);
+  --hero: #06143a;
+  --rail: #000000;
+  --rail-ink: #8793b4;
+  --success: #22c38e;
+  --warning: #f5a524;
+  --danger: #ff4d6a;
+  --shadow-lift: 0 18px 40px -18px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.04);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #edf1f7;
+  --surface: #ffffff;
+  --surface-2: #f4f7fc;
+  --surface-3: #e8eef8;
+  --line: #e1e7f0;
+  --line-strong: #cbd5e5;
+  --ink: #0a1222;
+  --muted: #55627d;
+  --faint: #8792aa;
+  --accent: #1f5bff;
+  --accent-hi: #1f5bff;
+  --accent-soft: #e5edff;
+  --hero: #071a4d;
+  --rail: #050912;
+  --rail-ink: #8a95b6;
+  --success: #0f9f6e;
+  --warning: #c98000;
+  --danger: #e2334d;
+  --shadow-lift: 0 18px 40px -20px rgb(10 25 60 / 0.35);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    font-size: 14px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  input[type='datetime-local']::-webkit-calendar-picker-indicator,
+  input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.55);
+  }
+}
+
+/* Thanh cuộn mảnh, chỉ đậm lên khi rê chuột */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--accent) 45%, transparent) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+
+/* Màu theo dự án: đặt style={{ '--hue': '#...' }} rồi dùng các class dưới */
+.hue-dot {
+  background: var(--hue);
+}
+.hue-text {
+  color: color-mix(in oklab, var(--hue) 85%, var(--ink));
+}
+.hue-tint {
+  background: color-mix(in oklab, var(--hue) 14%, transparent);
+}
+.hue-tint-soft {
+  background: color-mix(in oklab, var(--hue) 7%, transparent);
+}
+.hue-ring {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--hue) 35%, transparent);
+}
+
+.tone-danger {
+  color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 14%, transparent);
+}
+.tone-warning {
+  color: var(--warning);
+  background: color-mix(in oklab, var(--warning) 15%, transparent);
+}
+.tone-success {
+  color: var(--success);
+  background: color-mix(in oklab, var(--success) 14%, transparent);
+}
+.tone-accent {
+  color: var(--accent-hi);
+  background: var(--accent-soft);
+}
+.tone-muted {
+  color: var(--muted);
+  background: var(--surface-3);
+}
+
+.shadow-lift {
+  box-shadow: var(--shadow-lift);
+}
+
+/* Sóng trôi ngang liên tục (logo, bể nước, thẻ chào) */
+@keyframes tide-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.wave-drift {
+  animation: tide-drift 7s linear infinite;
+  transform-box: fill-box;
+}
+.wave-drift-slow {
+  animation: tide-drift 12s linear infinite reverse;
+  transform-box: fill-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-drift,
+  .wave-drift-slow {
+    animation: none;
+  }
+}

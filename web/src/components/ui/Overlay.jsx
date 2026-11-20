@@ -1,0 +1,158 @@
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+
+function useEscape(onClose, active = true) {
+  useEffect(() => {
+    if (!active) return undefined;
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, active]);
+}
+
+/** Hộp thoại ở giữa màn hình (hoặc sát đáy trên điện thoại). */
+export function Dialog({ open, onClose, title, children, width = 'sm:max-w-md', labelId = 'dialog-title' }) {
+  useEscape(onClose, open);
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:items-center sm:p-6">
+          <motion.div
+            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={labelId}
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.38, ease: [0.2, 0.75, 0.2, 1] }}
+            className={`shadow-lift relative max-h-[calc(100dvh-1rem)] w-full overflow-y-auto rounded-[22px] border border-line bg-surface p-5 sm:p-6 ${width}`}
+          >
+            {title && (
+              <h2 id={labelId} className="font-display text-base font-bold">
+                {title}
+              </h2>
+            )}
+            {children}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function ConfirmDialog({ open, onClose, onConfirm, title, body, confirmLabel = 'Xoá', danger = true }) {
+  return (
+    <Dialog open={open} onClose={onClose} title={title} labelId="confirm-title">
+      <p className="mt-2 text-muted">{body}</p>
+      <div className="mt-6 flex justify-end gap-2">
+        <button type="button" onClick={onClose} className="h-10 rounded-xl px-4 font-semibold text-muted hover:bg-surface-2 hover:text-ink">
+          Huỷ
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onConfirm();
+            onClose();
+          }}
+          className={`h-10 rounded-xl px-4 font-semibold text-white ${danger ? 'bg-danger hover:brightness-110' : 'bg-accent hover:brightness-110'}`}
+        >
+          {confirmLabel}
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
+/** Menu thả xuống đơn giản. items: [{ label, icon, onClick, danger }] */
+export function Menu({ trigger, items, align = 'right', label = 'Mở menu' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEscape(() => setOpen(false), open);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink"
+      >
+        {trigger}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.18 }}
+            className={`shadow-lift absolute top-full z-40 mt-1 min-w-44 origin-top rounded-xl border border-line bg-surface p-1 ${
+              align === 'right' ? 'right-0' : 'left-0'
+            }`}
+          >
+            {items.filter(Boolean).map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  role="menuitem"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(false);
+                    item.onClick();
+                  }}
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium ${
+                    item.danger ? 'text-danger hover:bg-danger/10' : 'text-ink hover:bg-surface-2'
+                  }`}
+                >
+                  {Icon && <Icon className="size-4" aria-hidden="true" />}
+                  {item.label}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function EmptyState({ icon: Icon, title, body, action }) {
+  return (
+    <div className="flex flex-col items-center px-6 py-10 text-center">
+      {Icon && (
+        <div className="tone-accent grid size-11 place-items-center rounded-2xl">
+          <Icon className="size-5" aria-hidden="true" />
+        </div>
+      )}
+      <p className="mt-3 font-semibold">{title}</p>
+      {body && <p className="mt-1 max-w-xs text-[13px] text-muted">{body}</p>}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
+
+export function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse rounded-lg bg-surface-3 ${className}`} />;
+}

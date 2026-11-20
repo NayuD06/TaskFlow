@@ -1,0 +1,19 @@
+# Render Blueprint: Dashboard > New > Blueprint > chọn repo này.
+# Các biến có sync: false sẽ được hỏi khi tạo service.
+services:
+  - type: web
+    name: taskflow-api
+    runtime: node
+    rootDir: api
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
