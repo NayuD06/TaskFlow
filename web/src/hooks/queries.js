@@ -1,5 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../components/ui/Toasts.jsx';
 import { api } from '../lib/api.js';
+import { shortDate } from '../lib/dates.js';
+import { tr } from '../lib/i18n.js';
 
 // ---------- Queries ----------
 
@@ -38,6 +41,14 @@ export const useTags = () => useQuery({ queryKey: ['tags'], queryFn: api.tasks.t
 
 export const useDashboard = () => useQuery({ queryKey: ['dashboard'], queryFn: api.dashboard });
 
+/** Cấu hình công khai từ máy chủ: Google, tải ảnh, email. Ít khi đổi nên giữ lâu. */
+export const useConfig = () => useQuery({ queryKey: ['config'], queryFn: api.config, staleTime: Infinity, gcTime: Infinity, retry: 1, meta: { quiet: true } });
+
+export const useMembers = (projectId, enabled = true) =>
+  useQuery({ queryKey: ['members', projectId], queryFn: () => api.projects.members(projectId), enabled: !!projectId && enabled });
+
+export const useComments = (taskId) => useQuery({ queryKey: ['comments', taskId], queryFn: () => api.tasks.comments(taskId), enabled: !!taskId });
+
 export const useActivity = (type = 'all') =>
   useQuery({ queryKey: ['activity', type], queryFn: () => api.activity(type, 30), placeholderData: keepPreviousData });
 
@@ -70,12 +81,26 @@ function restore(qc, saved) {
 
 const refreshAll = (qc) => qc.invalidateQueries();
 
+/** Hoàn thành một việc lặp lại: báo cho người dùng biết lần tiếp theo đã được tạo. */
+function useNextOccurrenceToast() {
+  const notify = useToast();
+  return (result) => {
+    const next = result?.nextOccurrence;
+    if (!next) return;
+    notify({
+      tone: 'success',
+      message: next.deadline ? tr('Đã tạo lần lặp tiếp theo: {date}', { date: shortDate(new Date(next.deadline)) }) : tr('Đã tạo lần lặp tiếp theo'),
+    });
+  };
+}
+
 // ---------- Mutations ----------
 
 export function useToggleTask() {
   const qc = useQueryClient();
+  const announce = useNextOccurrenceToast();
   return useMutation({
-    mutationFn: (task) => api.tasks.toggle(task._id),
+    mutationFn: (task) => api.tasks.toggle(task._id).then((res) => (announce(res), res)),
     onMutate: async (task) => {
       const saved = await snapshot(qc);
       const done = task.status !== 'done';
@@ -94,8 +119,9 @@ export function useToggleTask() {
 
 export function useUpdateTask() {
   const qc = useQueryClient();
+  const announce = useNextOccurrenceToast();
   return useMutation({
-    mutationFn: ({ id, data }) => api.tasks.update(id, data),
+    mutationFn: ({ id, data }) => api.tasks.update(id, data).then((res) => (announce(res), res)),
     onMutate: async ({ id, data }) => {
       const saved = await snapshot(qc);
       const optimistic = { ...data };
@@ -105,7 +131,7 @@ export function useUpdateTask() {
       patchTaskCaches(qc, id, optimistic);
       return { saved };
     },
-    onSuccess: (task) => qc.setQueryData(['task', task._id], task),
+    onSuccess: ({ nextOccurrence, ...task }) => qc.setQueryData(['task', task._id], task),
     onError: (_e, _v, ctx) => restore(qc, ctx?.saved),
     onSettled: () => refreshAll(qc),
   });
@@ -114,8 +140,9 @@ export function useUpdateTask() {
 /** Kéo thả: `apply` là hàm nhận danh sách task cũ của dự án, trả về danh sách mới. */
 export function useMoveTask() {
   const qc = useQueryClient();
+  const announce = useNextOccurrenceToast();
   return useMutation({
-    mutationFn: ({ id, status, index }) => api.tasks.move(id, status, index),
+    mutationFn: ({ id, status, index }) => api.tasks.move(id, status, index).then((res) => (announce(res), res)),
     onMutate: async ({ queryKey, apply }) => {
       const saved = await snapshot(qc);
       if (queryKey && apply) qc.setQueryData(queryKey, (list) => (Array.isArray(list) ? apply(list) : list));
@@ -164,4 +191,82 @@ export function useSaveProject() {
 export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (id) => api.projects.remove(id), onSettled: () => refreshAll(qc) });
+}
+
+// ---------- Thành viên dự án ----------
+
+export function useMemberActions(projectId) {
+  const qc = useQueryClient();
+  const settle = () => {
+    qc.invalidateQueries({ queryKey: ['members', projectId] });
+    qc.invalidateQueries({ queryKey: ['projects'] });
+    qc.invalidateQueries({ queryKey: ['project', projectId] });
+  };
+  return {
+    invite: useMutation({ mutationFn: (email) => api.projects.invite(projectId, email), onSuccess: settle }),
+    remove: useMutation({ mutationFn: (userId) => api.projects.removeMember(projectId, userId), onSuccess: settle }),
+    cancel: useMutation({ mutationFn: (email) => api.projects.cancelInvite(projectId, email), onSuccess: settle }),
+  };
+}
+
+// ---------- Bình luận, ảnh, Pomodoro ----------
+
+/** Cập nhật task trong mọi cache (danh sách, chi tiết) bằng dữ liệu server vừa trả về. */
+function putTask(qc, task) {
+  qc.setQueryData(['task', task._id], task);
+  qc.setQueriesData({ queryKey: ['tasks'] }, (list) => (Array.isArray(list) ? list.map((t) => (t._id === task._id ? { ...t, ...task } : t)) : list));
+}
+
+const bumpComments = (qc, taskId, delta) => {
+  const apply = (t) => (t._id === taskId ? { ...t, commentCount: Math.max(0, (t.commentCount || 0) + delta) } : t);
+  qc.setQueryData(['task', taskId], (t) => (t ? apply(t) : t));
+  qc.setQueriesData({ queryKey: ['tasks'] }, (list) => (Array.isArray(list) ? list.map(apply) : list));
+};
+
+export function useCommentActions(taskId) {
+  const qc = useQueryClient();
+  const key = ['comments', taskId];
+  return {
+    add: useMutation({
+      mutationFn: (text) => api.tasks.addComment(taskId, text),
+      onSuccess: (comment) => {
+        qc.setQueryData(key, (list = []) => [...list, comment]);
+        bumpComments(qc, taskId, 1);
+        qc.invalidateQueries({ queryKey: ['activity'] });
+      },
+    }),
+    remove: useMutation({
+      mutationFn: (commentId) => api.tasks.deleteComment(taskId, commentId),
+      onMutate: async (commentId) => {
+        await qc.cancelQueries({ queryKey: key });
+        const saved = qc.getQueryData(key);
+        qc.setQueryData(key, (list = []) => list.filter((c) => c._id !== commentId));
+        bumpComments(qc, taskId, -1);
+        return { saved };
+      },
+      onError: (_e, _id, ctx) => {
+        qc.setQueryData(key, ctx?.saved);
+        bumpComments(qc, taskId, 1);
+      },
+    }),
+  };
+}
+
+export function useAttachmentActions(taskId) {
+  const qc = useQueryClient();
+  return {
+    add: useMutation({ mutationFn: (data) => api.tasks.addAttachment(taskId, data), onSuccess: (task) => putTask(qc, task) }),
+    remove: useMutation({ mutationFn: (attachmentId) => api.tasks.removeAttachment(taskId, attachmentId), onSuccess: (task) => putTask(qc, task) }),
+  };
+}
+
+export function useLogPomodoro() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, minutes }) => api.tasks.pomodoro(taskId, minutes),
+    onSuccess: (task) => {
+      putTask(qc, task);
+      qc.invalidateQueries({ queryKey: ['activity'] });
+    },
+  });
 }

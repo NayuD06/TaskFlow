@@ -12,6 +12,7 @@ import { Comment } from '../../src/models/Comment.js';
 import { Project } from '../../src/models/Project.js';
 import { Task } from '../../src/models/Task.js';
 import { User } from '../../src/models/User.js';
+import { setCloudinaryFetch } from '../../src/services/cloudinary.js';
 import { outbox } from '../../src/services/mailer.js';
 
 const uri = process.env.MONGODB_URI_TEST;
@@ -41,6 +42,7 @@ describe('API với MongoDB', { skip }, () => {
 
   after(async () => {
     setGoogleVerifier(null);
+    setCloudinaryFetch(null);
     await mongoose.connection.dropDatabase();
     await mongoose.disconnect();
   });
@@ -347,6 +349,136 @@ describe('API với MongoDB', { skip }, () => {
       const projects = await Project.find({ owner: chi.id }).lean();
       assert.equal(projects.length, exported.projects.length + 1); // + dự án hướng dẫn của Chi
       await api().post('/api/import').set(auth(chi.token)).send({ foo: 'bar' }).expect(400);
+    });
+  });
+
+  describe('quản trị', () => {
+    let boss;
+    let boss2;
+    const deletes = [];
+    const cloud = (id) => ({
+      public_id: id,
+      secure_url: `https://res.cloudinary.com/taskflow-test/image/upload/v1/${id}.jpg`,
+      format: 'jpg',
+      bytes: 1000,
+      width: 10,
+      height: 10,
+      created_at: '2026-11-01T00:00:00Z',
+    });
+
+    before(async () => {
+      boss = await register('Sếp', 'boss@example.com');
+      boss2 = await register('Sếp Hai', 'boss2@example.com');
+      setCloudinaryFetch(async (url, opts) => {
+        const json = async () => body;
+        let body;
+        if (opts.method === 'DELETE') {
+          const ids = new URL(url).searchParams.getAll('public_ids[]');
+          deletes.push(...ids);
+          body = { deleted: Object.fromEntries(ids.map((id) => [id, 'deleted'])) };
+        } else if (url.includes('/usage')) {
+          body = { plan: 'Free', storage: { usage: 3000 } };
+        } else {
+          body = { resources: [cloud('taskflow/a'), cloud('taskflow/tasks/orphan'), cloud('other/project/x')] };
+        }
+        return { ok: true, status: 200, json };
+      });
+    });
+
+    it('email trong ADMIN_EMAILS là admin, người khác bị chặn', async () => {
+      assert.equal(boss.user.role, 'admin');
+      assert.equal(an.user.role, 'user');
+      await api().get('/api/admin/stats').set(auth(an.token)).expect(403);
+      const res = await api().get('/api/admin/stats?tzOffset=-420').set(auth(boss.token)).expect(200);
+      assert.ok(res.body.data.users.total >= 5);
+      assert.equal(res.body.data.users.admins, 2);
+      assert.equal(res.body.data.days.length, 14);
+      assert.ok(res.body.data.images.total >= 9);
+      assert.equal(res.body.data.integrations.cloudinaryAdmin, true);
+      assert.equal(res.body.data.integrations.mail, false);
+    });
+
+    it('tìm và lọc người dùng', async () => {
+      const res = await api().get('/api/admin/users').query({ q: 'AN@exa' }).set(auth(boss.token)).expect(200);
+      assert.equal(res.body.total, 1);
+      assert.equal(res.body.data[0].email, 'an@example.com');
+      assert.ok(res.body.data[0].projects >= 2);
+      assert.ok(res.body.data[0].tasks >= 1);
+      assert.equal(res.body.data[0].passwordHash, undefined);
+      const admins = await api().get('/api/admin/users?filter=admin').set(auth(boss.token)).expect(200);
+      assert.deepEqual(admins.body.data.map((u) => u.email).sort(), ['boss2@example.com', 'boss@example.com']);
+      assert.ok(admins.body.data.every((u) => u.envAdmin));
+    });
+
+    it('không tự khoá mình, không đổi được admin trong ADMIN_EMAILS', async () => {
+      await api().patch(`/api/admin/users/${boss.id}`).set(auth(boss.token)).send({ disabled: true }).expect(400);
+      await api().patch(`/api/admin/users/${boss2.id}`).set(auth(boss.token)).send({ role: 'user' }).expect(400);
+      await api().delete(`/api/admin/users/${boss2.id}`).set(auth(boss.token)).expect(400);
+      await api().patch(`/api/admin/users/${an.id}`).set(auth(boss.token)).send({ role: 'god' }).expect(400);
+      await api().patch('/api/admin/users/khong-phai-id').set(auth(boss.token)).send({ disabled: true }).expect(404);
+    });
+
+    it('khoá tài khoản: không gọi API, không đăng nhập được; mở khoá thì đăng nhập lại được', async () => {
+      const locked = await api().patch(`/api/admin/users/${chi.id}`).set(auth(boss.token)).send({ disabled: true }).expect(200);
+      assert.equal(locked.body.data.disabled, true);
+      await api().get('/api/projects').set(auth(chi.token)).expect(401); // token cũ bị vô hiệu
+      const login = await api().post('/api/auth/login').send({ email: chi.email, password: chi.password }).expect(403);
+      assert.match(login.body.error.message, /bị khoá/);
+      outbox.length = 0;
+      await api().post('/api/auth/forgot-password').send({ email: chi.email }).expect(200);
+      assert.equal(outbox.length, 0);
+      await api().patch(`/api/admin/users/${chi.id}`).set(auth(boss.token)).send({ disabled: false }).expect(200);
+      const again = await api().post('/api/auth/login').send({ email: chi.email, password: chi.password }).expect(200);
+      chi.token = again.body.data.token;
+    });
+
+    it('cấp rồi bỏ quyền admin', async () => {
+      await api().patch(`/api/admin/users/${an.id}`).set(auth(boss.token)).send({ role: 'admin' }).expect(200);
+      const me = await api().get('/api/auth/me').set(auth(an.token)).expect(200);
+      assert.equal(me.body.data.role, 'admin');
+      await api().get('/api/admin/users').set(auth(an.token)).expect(200);
+      await api().patch(`/api/admin/users/${an.id}`).set(auth(boss.token)).send({ role: 'user' }).expect(200);
+      await api().get('/api/admin/users').set(auth(an.token)).expect(403);
+    });
+
+    it('liệt kê ảnh trên Cloudinary kèm nơi đang dùng', async () => {
+      const res = await api().get('/api/admin/images?refresh=1').set(auth(boss.token)).expect(200);
+      const { configured, items, totals, usage } = res.body.data;
+      assert.equal(configured, true);
+      assert.deepEqual(items.map((i) => i.publicId).sort(), ['taskflow/a', 'taskflow/tasks/orphan']);
+      assert.equal(totals.unused, 1);
+      const used = items.find((i) => i.publicId === 'taskflow/a');
+      assert.equal(used.usage.length, 9);
+      assert.equal(used.usage[0].title, 'Viết báo cáo');
+      assert.equal(used.usage[0].projectName, 'Đồ án');
+      assert.equal(usage.plan, 'Free');
+      const unused = await api().get('/api/admin/images?filter=unused').set(auth(boss.token)).expect(200);
+      assert.deepEqual(unused.body.data.items.map((i) => i.publicId), ['taskflow/tasks/orphan']);
+      const search = await api().get('/api/admin/images').query({ q: 'báo cáo' }).set(auth(boss.token)).expect(200);
+      assert.deepEqual(search.body.data.items.map((i) => i.publicId), ['taskflow/a']);
+    });
+
+    it('xoá ảnh không dùng; ảnh đang dùng cần xác nhận và được gỡ khỏi công việc', async () => {
+      await api().delete('/api/admin/images').set(auth(boss.token)).send({ publicIds: ['other/project/x'] }).expect(400);
+      await api().delete('/api/admin/images').set(auth(boss.token)).send({ publicIds: [] }).expect(400);
+      const ok = await api().delete('/api/admin/images').set(auth(boss.token)).send({ publicIds: ['taskflow/tasks/orphan'] }).expect(200);
+      assert.deepEqual(ok.body.data.deleted, ['taskflow/tasks/orphan']);
+      await api().delete('/api/admin/images').set(auth(boss.token)).send({ publicIds: ['taskflow/a'] }).expect(409);
+      assert.ok(!deletes.includes('taskflow/a'));
+      const forced = await api().delete('/api/admin/images').set(auth(boss.token)).send({ publicIds: ['taskflow/a'], force: true }).expect(200);
+      assert.equal(forced.body.data.detached, 9);
+      assert.ok(deletes.includes('taskflow/a'));
+      const task = await Task.findOne({ title: 'Viết báo cáo' }).lean();
+      assert.equal(task.attachments.length, 0);
+      await api().delete('/api/admin/images').set(auth(an.token)).send({ publicIds: ['taskflow/a'] }).expect(403);
+    });
+
+    it('xoá tài khoản người dùng cùng dữ liệu của họ', async () => {
+      const res = await api().delete(`/api/admin/users/${chi.id}`).set(auth(boss.token)).expect(200);
+      assert.ok(res.body.data.deletedProjects >= 1);
+      assert.equal(await User.countDocuments({ email: chi.email }), 0);
+      assert.equal(await Project.countDocuments({ owner: chi.id }), 0);
+      await api().get('/api/auth/me').set(auth(chi.token)).expect(401);
     });
   });
 

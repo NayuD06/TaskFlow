@@ -6,8 +6,12 @@ import { BrowserRouter } from 'react-router';
 import App from './App.jsx';
 import { AuthProvider } from './components/auth/AuthContext.jsx';
 import { UIProvider } from './components/shell/UIContext.jsx';
+import ErrorBoundary from './components/ui/ErrorBoundary.jsx';
 import { ToastProvider } from './components/ui/Toasts.jsx';
+import { initMonitoring } from './lib/monitoring.js';
 import './index.css';
+
+initMonitoring();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,18 +31,20 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <MotionConfig reducedMotion="user">
-          <ToastProvider>
-            <AuthProvider>
-              <UIProvider>
-                <App />
-              </UIProvider>
-            </AuthProvider>
-          </ToastProvider>
-        </MotionConfig>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <MotionConfig reducedMotion="user">
+            <ToastProvider>
+              <AuthProvider>
+                <UIProvider>
+                  <App />
+                </UIProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </MotionConfig>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

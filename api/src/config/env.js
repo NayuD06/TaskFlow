@@ -50,7 +50,15 @@ export const env = {
   cloudinary: {
     cloudName: clean(process.env.CLOUDINARY_CLOUD_NAME),
     uploadPreset: clean(process.env.CLOUDINARY_UPLOAD_PRESET),
+    // Khoá Admin API (chỉ máy chủ biết), dùng cho trang quản trị: xem và xoá ảnh đã lưu
+    apiKey: clean(process.env.CLOUDINARY_API_KEY),
+    apiSecret: clean(process.env.CLOUDINARY_API_SECRET),
   },
+  // Email luôn là quản trị viên (cách nhanh nhất để có tài khoản admin đầu tiên), cách nhau bằng dấu phẩy
+  adminEmails: (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
   sentryDsn: clean(process.env.SENTRY_DSN),
 };
 

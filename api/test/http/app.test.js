@@ -44,7 +44,7 @@ describe('tài liệu API', () => {
   it('/api/docs.json là OpenAPI 3.1 hợp lệ và có đủ các nhóm route', async () => {
     const res = await request(app).get('/api/docs.json').expect(200);
     assert.equal(res.body.openapi, '3.1.0');
-    for (const path of ['/api/auth/google', '/api/auth/forgot-password', '/api/projects/{id}/members', '/api/tasks/{id}/comments', '/api/tasks/{id}/pomodoros', '/api/export', '/api/import']) {
+    for (const path of ['/api/auth/google', '/api/auth/forgot-password', '/api/projects/{id}/members', '/api/tasks/{id}/comments', '/api/tasks/{id}/pomodoros', '/api/export', '/api/import', '/api/admin/users/{id}', '/api/admin/images']) {
       assert.ok(res.body.paths[path], `thiếu ${path}`);
     }
     // Mọi $ref đều trỏ tới schema có thật
@@ -69,6 +69,9 @@ describe('xác thực', () => {
     ['get', '/api/auth/me'],
     ['post', '/api/tasks/abc/comments'],
     ['post', '/api/projects/abc/members'],
+    ['get', '/api/admin/stats'],
+    ['get', '/api/admin/images'],
+    ['delete', '/api/admin/users/abc'],
   ]) {
     it(`${method.toUpperCase()} ${path} cần đăng nhập`, async () => {
       await request(app)[method](path).expect(401);

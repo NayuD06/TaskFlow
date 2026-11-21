@@ -1,10 +1,11 @@
-import { ArrowRight, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { ArrowRight, LoaderCircle, MailPlus, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, useAnimate } from 'motion/react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { firstName, useAuth } from '../components/auth/AuthContext.jsx';
 import AuthLayout, { Banner } from '../components/auth/AuthLayout.jsx';
 import { PasswordField, PasswordStrength, TextField } from '../components/auth/Fields.jsx';
+import GoogleButton, { useGoogleEnabled } from '../components/auth/GoogleButton.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
 import { tr } from '../lib/i18n.js';
 
@@ -26,10 +27,13 @@ function validate(form) {
 }
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const notify = useToast();
   const [params] = useSearchParams();
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  const google = useGoogleEnabled();
+  // Mở từ email mời vào dự án: điền sẵn email để dự án tự xuất hiện sau khi đăng ký
+  const invitedEmail = params.get('email') || '';
+  const [form, setForm] = useState({ name: '', email: invitedEmail, password: '', confirm: '' });
   const [errors, setErrors] = useState({});
   const [banner, setBanner] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -39,6 +43,23 @@ export default function Register() {
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
     if (errors[key]) setErrors((er) => ({ ...er, [key]: undefined }));
+  };
+
+  const withGoogle = async (credential) => {
+    setLoading(true);
+    setBanner(null);
+    try {
+      const { user, created } = await googleLogin(credential);
+      notify({
+        tone: 'success',
+        message: created
+          ? tr('Chào mừng {name}! Đã có sẵn một dự án mẫu cho bạn.', { name: firstName(user.name) })
+          : tr('Chào mừng trở lại, {name}!', { name: firstName(user.name) }),
+      });
+    } catch (err) {
+      setLoading(false);
+      setBanner(err.status === 0 ? tr('Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.') : err.message);
+    }
   };
 
   const submit = async (e) => {
@@ -79,6 +100,20 @@ export default function Register() {
       }
     >
       <AnimatePresence>{banner && <Banner>{banner}</Banner>}</AnimatePresence>
+      {invitedEmail && (
+        <p className="tone-accent mb-4 flex items-start gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium">
+          <MailPlus className="mt-px size-4 shrink-0" aria-hidden="true" />
+          {tr('Bạn được mời vào một dự án. Đăng ký bằng đúng email này, dự án sẽ tự có trong danh sách của bạn.')}
+        </p>
+      )}
+      {google && (
+        <>
+          <GoogleButton onCredential={withGoogle} text="signup_with" disabled={loading} />
+          <div className="my-5 flex items-center gap-3 text-xs text-faint">
+            <span className="h-px flex-1 bg-line" /> {tr('hoặc đăng ký bằng email')} <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       <form ref={scope} onSubmit={submit} noValidate className="space-y-4">
         <TextField
@@ -89,7 +124,7 @@ export default function Register() {
           value={form.name}
           onChange={set('name')}
           error={errors.name}
-          autoFocus
+          autoFocus={!google}
         />
         <TextField
           label="Email"

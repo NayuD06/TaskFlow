@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { env } from '../config/env.js';
 import { hashPassword, signToken, verifyPassword } from '../lib/auth.js';
 import { verifyGoogleCredential } from '../lib/google.js';
+import { accountLocked } from '../middleware/auth.js';
 import {
   invalid,
   validateForgot,
@@ -11,11 +12,8 @@ import {
   validateRegister,
   validateReset,
 } from '../lib/validate.js';
-import { Activity } from '../models/Activity.js';
-import { Comment } from '../models/Comment.js';
-import { Project } from '../models/Project.js';
-import { Task } from '../models/Task.js';
 import { User, publicUser } from '../models/User.js';
+import { deleteUserData } from '../services/accounts.js';
 import { claimInvites } from '../services/access.js';
 import { resetPasswordEmail } from '../services/emails.js';
 import { sendMail } from '../services/mailer.js';
@@ -68,6 +66,7 @@ export async function login(req, res) {
   // Luôn chạy bcrypt kể cả khi không có user để thời gian phản hồi như nhau
   const ok = await verifyPassword(password, user?.passwordHash);
   if (!user || !ok) throw badCredentials();
+  if (user.disabled) throw accountLocked();
 
   user.lastLoginAt = new Date();
   await user.save();
@@ -104,6 +103,7 @@ export async function googleSignIn(req, res) {
       created = true;
     }
   }
+  if (user.disabled) throw accountLocked();
   user.lastLoginAt = new Date();
   await user.save();
   if (created) await welcome(user);
@@ -115,7 +115,7 @@ export async function googleSignIn(req, res) {
 export async function forgotPassword(req, res) {
   const { email } = validateForgot(req.body);
   const user = await User.findOne({ email });
-  if (user && !user.isDemo) {
+  if (user && !user.isDemo && !user.disabled) {
     const token = randomBytes(32).toString('base64url');
     user.resetTokenHash = sha256(token);
     user.resetTokenExpires = new Date(Date.now() + RESET_TTL);
@@ -131,6 +131,7 @@ export async function resetPassword(req, res) {
   const { token, password } = validateReset(req.body);
   const user = await User.findOne({ resetTokenHash: sha256(token), resetTokenExpires: { $gt: new Date() } }).select('+tokenVersion');
   if (!user) throw invalid({ token: 'Liên kết đã hết hạn hoặc đã được dùng. Hãy yêu cầu liên kết mới.' });
+  if (user.disabled) throw accountLocked();
   user.passwordHash = await hashPassword(password);
   user.passwordSet = true;
   user.resetTokenHash = null;
@@ -193,16 +194,6 @@ export async function deleteMe(req, res) {
     const password = typeof req.body?.password === 'string' ? req.body.password : '';
     if (!password || !(await verifyPassword(password, user.passwordHash))) throw invalid({ password: 'Mật khẩu không đúng' });
   }
-  const owner = user._id;
-  const ownedIds = await Project.find({ owner }).distinct('_id');
-  const [tasks, projects] = await Promise.all([
-    Task.deleteMany({ project: { $in: ownedIds } }),
-    Project.deleteMany({ owner }),
-    Activity.deleteMany({ $or: [{ owner }, { project: { $in: ownedIds } }] }),
-    Comment.deleteMany({ $or: [{ author: owner }, { project: { $in: ownedIds } }] }),
-    // Rời khỏi các dự án người khác đã mời mình vào
-    Project.updateMany({ 'members.user': owner }, { $pull: { members: { user: owner } } }),
-  ]);
-  await user.deleteOne();
-  res.json({ data: { deletedProjects: projects.deletedCount, deletedTasks: tasks.deletedCount } });
+  const { projects, tasks } = await deleteUserData(user._id);
+  res.json({ data: { deletedProjects: projects, deletedTasks: tasks } });
 }

@@ -74,7 +74,7 @@ function UserCard({ folded, onNavigate }) {
           {!folded && (
             <motion.span {...fade} className="min-w-0 leading-tight">
               <span className="block truncate text-[13px] font-semibold text-ink">{user.name}</span>
-              <span className="block truncate text-[11px] text-faint">{user.isDemo ? tr('Tài khoản demo') : user.email}</span>
+              <span className="block truncate text-[11px] text-muted">{user.isDemo ? tr('Tài khoản demo') : user.email}</span>
             </motion.span>
           )}
         </AnimatePresence>

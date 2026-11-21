@@ -1,16 +1,19 @@
-import { Check, LoaderCircle, MoreHorizontal, RotateCcw, Trash2, X } from 'lucide-react';
+import { Check, LoaderCircle, MoreHorizontal, Pause, Play, Repeat, RotateCcw, Timer, Trash2, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useCreateTask, useDeleteTask, useProjects, useTask, useUpdateTask } from '../../hooks/queries.js';
 import { api } from '../../lib/api.js';
-import { PRIORITIES, PRIORITY, STATUS, STATUSES, hueStyle } from '../../lib/constants.js';
+import { PRIORITIES, PRIORITY, REPEAT, REPEATS, STATUS, STATUSES, hueStyle } from '../../lib/constants.js';
 import { formatTime, fromInputValue, quickDeadline, relativeTime, shortDate, toInputValue } from '../../lib/dates.js';
 import { Menu } from '../ui/Overlay.jsx';
 import Segmented from '../ui/Segmented.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import { useUI } from '../shell/UIContext.jsx';
+import { FOCUS_CHOICES, formatClock, usePomodoro } from '../pomodoro/Pomodoro.jsx';
+import Attachments from './Attachments.jsx';
 import Checklist from './Checklist.jsx';
+import Comments from './Comments.jsx';
 import TagInput from './TagInput.jsx';
 import { tr } from '../../lib/i18n.js';
 
@@ -40,6 +43,49 @@ function AutoTextarea({ value, onChange, onBlur, className, ...rest }) {
   return <textarea ref={ref} rows={1} value={value} onChange={onChange} onBlur={onBlur} className={className} {...rest} />;
 }
 
+/** Bắt đầu Pomodoro cho công việc này, kèm số phiên và phút đã tập trung. */
+function FocusRow({ task, title }) {
+  const pomo = usePomodoro();
+  const [minutes, setMinutes] = useState(25);
+  if (!pomo) return null;
+  const mine = pomo.state?.taskId === task._id;
+  const running = mine && !!pomo.state.endsAt;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {mine ? (
+        <button
+          type="button"
+          onClick={running ? pomo.pause : pomo.resume}
+          className="tone-accent inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-semibold tabular-nums"
+        >
+          {running ? <Pause className="size-4" aria-hidden="true" /> : <Play className="size-4" aria-hidden="true" />}
+          {pomo.state.phase === 'break' ? tr('Đang nghỉ {time}', { time: formatClock(pomo.remaining) }) : formatClock(pomo.remaining)}
+        </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => pomo.start({ taskId: task._id, title, minutes })}
+            className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3 text-[13px] font-semibold text-white hover:brightness-110"
+          >
+            <Timer className="size-4" aria-hidden="true" /> {tr('Bắt đầu tập trung')}
+          </button>
+          <Segmented
+            size="sm"
+            label={tr('Số phút mỗi phiên')}
+            value={minutes}
+            onChange={setMinutes}
+            options={FOCUS_CHOICES.map((m) => ({ value: m, label: tr('{n} phút', { n: m }) }))}
+          />
+        </>
+      )}
+      {task.pomodoros > 0 && (
+        <span className="text-xs text-muted">{tr('{n} phiên · {m} phút tập trung', { n: task.pomodoros, m: task.focusMinutes || 0 })}</span>
+      )}
+    </div>
+  );
+}
+
 function SheetBody({ task, mode, defaults, onClose }) {
   const notify = useToast();
   const qc = useQueryClient();
@@ -58,6 +104,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
     project: task?.project?._id ?? defaults?.project ?? '',
     checklist: task?.checklist ?? [],
     tags: task?.tags ?? defaults?.tags ?? [],
+    repeat: task?.repeat ?? 'none',
   }));
   const [error, setError] = useState(null);
   const [savedAt, setSavedAt] = useState(null);
@@ -72,8 +119,9 @@ function SheetBody({ task, mode, defaults, onClose }) {
       priority: task.priority,
       deadline: task.deadline,
       tags: task.tags ?? f.tags,
+      repeat: task.repeat ?? f.repeat,
     }));
-  }, [task?.status, task?.checklist, task?.priority, task?.deadline, task?.tags]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [task?.status, task?.checklist, task?.priority, task?.deadline, task?.tags, task?.repeat]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (creating && !form.project && projects.length) setForm((f) => ({ ...f, project: projects[0]._id }));
@@ -120,9 +168,9 @@ function SheetBody({ task, mode, defaults, onClose }) {
           action: {
             label: tr('Hoàn tác'),
             onClick: async () => {
-              const { title, description, status, priority, deadline, checklist, tags } = snapshot;
+              const { title, description, status, priority, deadline, checklist, tags, repeat } = snapshot;
               try {
-                await api.tasks.create({ title, description, status, priority, deadline, checklist, tags, project: snapshot.project?._id });
+                await api.tasks.create({ title, description, status, priority, deadline, checklist, tags, repeat, project: snapshot.project?._id });
                 notify({ tone: 'success', message: tr('Đã khôi phục công việc') });
               } catch (err) {
                 notify({ tone: 'error', message: err.message });
@@ -137,6 +185,7 @@ function SheetBody({ task, mode, defaults, onClose }) {
 
   const project = projects.find((p) => p._id === form.project) || task?.project;
   const done = form.status === 'done';
+  const canModerate = projects.find((p) => p._id === task?.project?._id)?.role === 'owner';
 
   return (
     <>
@@ -256,6 +305,37 @@ function SheetBody({ task, mode, defaults, onClose }) {
             </div>
           </Row>
 
+          <Row label={tr('Lặp lại')}>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="relative">
+                <Repeat className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" aria-hidden="true" />
+                <select
+                  value={form.repeat}
+                  aria-label={tr('Lặp lại')}
+                  onChange={(e) => save({ repeat: e.target.value })}
+                  className="h-9 w-full max-w-60 rounded-lg border border-line bg-surface-2 pr-2.5 pl-8 text-[13px] outline-none focus:border-accent"
+                >
+                  {REPEATS.map((r) => (
+                    <option key={r} value={r}>
+                      {REPEAT[r].label}
+                    </option>
+                  ))}
+                </select>
+              </span>
+              {form.repeat !== 'none' && (
+                <span className="text-xs text-faint">
+                  {form.deadline ? tr('Xong việc này sẽ tự tạo lần tiếp theo.') : tr('Nên đặt hạn chót để biết lần sau rơi vào ngày nào.')}
+                </span>
+              )}
+            </div>
+          </Row>
+
+          {!creating && (
+            <Row label={tr('Tập trung')}>
+              <FocusRow task={task} title={form.title.trim() || task.title} />
+            </Row>
+          )}
+
           <Row label={tr('Nhãn')}>
             <TagInput value={form.tags} onChange={(tags) => save({ tags })} />
           </Row>
@@ -295,6 +375,17 @@ function SheetBody({ task, mode, defaults, onClose }) {
         <div className="mt-5">
           <Checklist items={form.checklist} onChange={(checklist) => save({ checklist })} />
         </div>
+
+        {!creating && (
+          <>
+            <div className="mt-6">
+              <Attachments task={task} />
+            </div>
+            <div className="mt-6 border-t border-line pt-5">
+              <Comments taskId={task._id} canModerate={canModerate} />
+            </div>
+          </>
+        )}
 
         {error && (
           <motion.p

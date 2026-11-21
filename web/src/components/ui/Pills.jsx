@@ -1,6 +1,7 @@
-import { CalendarClock, ListChecks } from 'lucide-react';
-import { HUES, PRIORITY, STATUS, hueStyle } from '../../lib/constants.js';
+import { CalendarClock, Image, ListChecks, MessageSquare, Repeat, Timer } from 'lucide-react';
+import { HUES, PRIORITY, REPEAT, STATUS, hueStyle } from '../../lib/constants.js';
 import { describeDeadline } from '../../lib/dates.js';
+import { tr } from '../../lib/i18n.js';
 
 const base = 'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap';
 
@@ -47,6 +48,47 @@ export function ChecklistCount({ checklist = [] }) {
       <ListChecks className="size-3" aria-hidden="true" />
       {done}/{checklist.length}
     </span>
+  );
+}
+
+/** Các dấu nhỏ trên thẻ công việc: lặp lại, số bình luận, số ảnh, số phiên Pomodoro. */
+export function TaskMeta({ task }) {
+  const comments = task.commentCount || 0;
+  const images = task.attachments?.length || 0;
+  const repeat = task.repeat && task.repeat !== 'none' ? REPEAT[task.repeat] : null;
+  if (!repeat && !comments && !images && !task.pomodoros) return null;
+  const item = 'inline-flex items-center gap-1 text-[11px] font-semibold text-muted';
+  return (
+    <>
+      {repeat && (
+        <span className={item} title={repeat.label}>
+          <Repeat className="size-3" aria-hidden="true" />
+          <span className="sr-only">{tr('Lặp lại')}: </span>
+          {repeat.short}
+        </span>
+      )}
+      {comments > 0 && (
+        <span className={item} title={tr('{n} bình luận', { n: comments })}>
+          <MessageSquare className="size-3" aria-hidden="true" />
+          {comments}
+          <span className="sr-only"> {tr('bình luận')}</span>
+        </span>
+      )}
+      {images > 0 && (
+        <span className={item} title={tr('{n} ảnh', { n: images })}>
+          <Image className="size-3" aria-hidden="true" />
+          {images}
+          <span className="sr-only"> {tr('ảnh')}</span>
+        </span>
+      )}
+      {task.pomodoros > 0 && (
+        <span className={item} title={tr('{n} phiên Pomodoro, {m} phút tập trung', { n: task.pomodoros, m: task.focusMinutes || 0 })}>
+          <Timer className="size-3" aria-hidden="true" />
+          {task.pomodoros}
+          <span className="sr-only"> {tr('phiên Pomodoro')}</span>
+        </span>
+      )}
+    </>
   );
 }
 

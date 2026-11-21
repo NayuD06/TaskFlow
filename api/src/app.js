@@ -9,9 +9,10 @@ import { env, isProd, isTest } from './config/env.js';
 import { publicConfig } from './controllers/metaController.js';
 import { importData } from './controllers/portableController.js';
 import { buildOpenApi } from './docs/openapi.js';
-import { requireAuth } from './middleware/auth.js';
+import { requireAdmin, requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundRoute } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { adminRouter } from './routes/adminRoutes.js';
 import { authRouter } from './routes/authRoutes.js';
 import { insightRouter, projectRouter, taskRouter } from './routes/taskRoutes.js';
 
@@ -85,6 +86,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
 
   // Mọi route dữ liệu đều cần đăng nhập, và chỉ trả về dữ liệu người đó được xem
+  app.use('/api/admin', requireAuth, requireAdmin, adminRouter);
   app.use('/api/tasks', requireAuth, taskRouter);
   app.use('/api/projects', requireAuth, projectRouter);
   app.use('/api', requireAuth, insightRouter);

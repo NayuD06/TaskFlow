@@ -1,7 +1,8 @@
-import { Archive, ArchiveRestore, FolderOpen, MoreHorizontal, Pencil, Plus, Search, Trash2, TriangleAlert, X } from 'lucide-react';
+import { Archive, ArchiveRestore, FolderOpen, LogOut, MoreHorizontal, Pencil, Plus, Search, Trash2, TriangleAlert, Users, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { AvatarStack } from '../components/project/Members.jsx';
 import WaterCover from '../components/project/WaterCover.jsx';
 import { useUI } from '../components/shell/UIContext.jsx';
 import { ProgressBar } from '../components/ui/Charts.jsx';
@@ -11,7 +12,10 @@ import { ConfirmDialog, EmptyState, Menu, Skeleton } from '../components/ui/Over
 import { ProjectTile } from '../components/ui/Pills.jsx';
 import Segmented from '../components/ui/Segmented.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../components/auth/AuthContext.jsx';
 import { useDeleteProject, useProjects, useSaveProject } from '../hooks/queries.js';
+import { api } from '../lib/api.js';
 import { hueOf, hueStyle } from '../lib/constants.js';
 import { relativeTime } from '../lib/dates.js';
 import { usePersistentState } from '../lib/theme.js';
@@ -25,9 +29,10 @@ const SORTS = {
   name: { label: tr('Tên A đến Z'), fn: (a, b) => a.name.localeCompare(b.name, 'vi') },
 };
 
-function ProjectCard({ project, onArchive, onDelete }) {
+function ProjectCard({ project, onArchive, onDelete, onLeave }) {
   const { editProject } = useUI();
   const s = project.stats;
+  const member = project.role === 'member';
   return (
     <motion.article
       layout
@@ -45,13 +50,17 @@ function ProjectCard({ project, onArchive, onDelete }) {
         <Menu
           label={tr('Tuỳ chọn cho {name}', { name: project.name })}
           trigger={<MoreHorizontal className="size-4" />}
-          items={[
-            { label: tr('Sửa'), icon: Pencil, onClick: () => editProject(project) },
-            project.archived
-              ? { label: tr('Khôi phục'), icon: ArchiveRestore, onClick: () => onArchive(project, false) }
-              : { label: tr('Lưu trữ'), icon: Archive, onClick: () => onArchive(project, true) },
-            { label: tr('Xoá dự án'), icon: Trash2, danger: true, onClick: () => onDelete(project) },
-          ]}
+          items={
+            member
+              ? [{ label: tr('Rời dự án'), icon: LogOut, danger: true, onClick: () => onLeave(project) }]
+              : [
+                  { label: tr('Sửa'), icon: Pencil, onClick: () => editProject(project) },
+                  project.archived
+                    ? { label: tr('Khôi phục'), icon: ArchiveRestore, onClick: () => onArchive(project, false) }
+                    : { label: tr('Lưu trữ'), icon: Archive, onClick: () => onArchive(project, true) },
+                  { label: tr('Xoá dự án'), icon: Trash2, danger: true, onClick: () => onDelete(project) },
+                ]
+          }
         />
       </div>
 
@@ -63,6 +72,12 @@ function ProjectCard({ project, onArchive, onDelete }) {
         <p className="mt-1 line-clamp-2 min-h-[2lh] text-[13px] leading-relaxed text-muted">{project.description || tr('Chưa có mô tả.')}</p>
 
         <div className="mt-4 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+          {member && project.ownerInfo && (
+            <span className="tone-accent inline-flex max-w-full items-center gap-1 truncate rounded-full px-2 py-0.5">
+              <Users className="size-3 shrink-0" aria-hidden="true" />
+              <span className="truncate">{tr('Của {name}', { name: project.ownerInfo.name })}</span>
+            </span>
+          )}
           <span className="tone-muted rounded-full px-2 py-0.5">
             {s.open} {tr('đang mở')}
           </span>
@@ -85,9 +100,12 @@ function ProjectCard({ project, onArchive, onDelete }) {
             <span className="font-display font-bold tabular-nums">{s.progress}%</span>
           </div>
           <ProgressBar value={s.progress} color={hueOf(project.color)} className="mt-1.5 h-1.5" />
-          <p className="mt-3 text-[11px] text-faint">
-            {tr('Cập nhật')} {relativeTime(project.updatedAt)}
-          </p>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="text-[11px] text-faint">
+              {tr('Cập nhật')} {relativeTime(project.updatedAt)}
+            </p>
+            <AvatarStack project={project} size={22} max={4} />
+          </div>
         </div>
       </Link>
     </motion.article>
@@ -100,6 +118,9 @@ export default function Projects() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = usePersistentState('taskflow-project-sort', 'recent');
   const [confirm, setConfirm] = useState(null);
+  const [leaving, setLeaving] = useState(null);
+  const qc = useQueryClient();
+  const { user } = useAuth();
   const { data: projects, isLoading, isError, error, refetch } = useProjects(tab);
   const { data: archived = [] } = useProjects('true');
   const { data: active = [] } = useProjects('false');
@@ -206,7 +227,13 @@ export default function Projects() {
         <motion.div layout className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {shown.map((p) => (
-              <ProjectCard key={p._id} project={p} onArchive={onArchive} onDelete={(project) => setConfirm(project)} />
+              <ProjectCard
+                key={p._id}
+                project={p}
+                onArchive={onArchive}
+                onDelete={(project) => setConfirm(project)}
+                onLeave={(project) => setLeaving(project)}
+              />
             ))}
             {tab === 'false' && !query && (
               <motion.button
@@ -243,6 +270,21 @@ export default function Projects() {
         title={tr('Xoá dự án “{name}”?', { name: confirm?.name })}
         body={tr('Toàn bộ {total} công việc trong dự án cũng sẽ bị xoá và không thể khôi phục.', { total: confirm?.stats.total ?? 0 })}
         confirmLabel={tr('Xoá vĩnh viễn')}
+      />
+      <ConfirmDialog
+        open={!!leaving}
+        onClose={() => setLeaving(null)}
+        title={tr('Rời dự án “{name}”?', { name: leaving?.name })}
+        body={tr('Bạn sẽ không xem được dự án này nữa cho tới khi chủ dự án mời lại.')}
+        confirmLabel={tr('Rời dự án')}
+        onConfirm={() => {
+          const project = leaving;
+          api.projects
+            .removeMember(project._id, user._id)
+            .then(() => notify({ message: tr('Đã rời dự án “{name}”', { name: project.name }) }))
+            .catch((err) => notify({ tone: 'error', message: err.message }))
+            .finally(() => qc.invalidateQueries());
+        }}
       />
     </RisePage>
   );

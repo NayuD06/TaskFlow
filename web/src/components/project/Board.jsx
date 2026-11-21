@@ -6,11 +6,12 @@ import { motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMoveTask, useToggleTask } from '../../hooks/queries.js';
+import { cloudinaryThumb } from '../../lib/cloudinary.js';
 import { PRIORITY, STATUS, STATUSES } from '../../lib/constants.js';
 import { useUI } from '../shell/UIContext.jsx';
 import { StrikeTitle } from '../task/TaskRow.jsx';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
-import { ChecklistCount, DueChip, PriorityPill, TagChips } from '../ui/Pills.jsx';
+import { ChecklistCount, DueChip, PriorityPill, TagChips, TaskMeta } from '../ui/Pills.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import QuickAdd from './QuickAdd.jsx';
 import { tr } from '../../lib/i18n.js';
@@ -30,6 +31,7 @@ function CardBody({ task, overlay = false }) {
   const notify = useToast();
   const done = task.status === 'done';
   const color = PRIORITY[task.priority]?.color;
+  const cover = task.attachments?.[0];
 
   return (
     <div
@@ -38,6 +40,16 @@ function CardBody({ task, overlay = false }) {
       }`}
     >
       <span className="absolute inset-y-3 left-0 w-[3px] rounded-r-full" style={{ background: done ? 'var(--line-strong)' : color }} aria-hidden="true" />
+      {cover && (
+        <img
+          src={cloudinaryThumb(cover.url, 480, 220)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`-mx-0.5 mb-3 aspect-[24/11] w-[calc(100%+4px)] rounded-xl object-cover ${done ? 'opacity-60 grayscale' : ''}`}
+        />
+      )}
       <div className="flex items-start gap-2.5">
         <span className="pt-px" onPointerDown={(e) => e.stopPropagation()}>
           <LiquidCheck
@@ -72,6 +84,7 @@ function CardBody({ task, overlay = false }) {
         <PriorityPill priority={task.priority} muted={done} />
         <DueChip task={task} />
         <ChecklistCount checklist={task.checklist} />
+        <TaskMeta task={task} />
         <TagChips tags={task.tags} max={2} />
         {task.description && !task.checklist?.length && <AlignLeft className="size-3.5 text-faint" aria-label={tr('Có mô tả')} />}
       </div>

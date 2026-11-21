@@ -38,6 +38,7 @@ const schemas = {
     accentColor: str,
     isDemo: bool,
     hasPassword: { type: 'boolean', description: 'false nếu tài khoản tạo bằng Google và chưa đặt mật khẩu' },
+    role: { type: 'string', enum: ['user', 'admin'] },
     createdAt: date,
   }),
   Session: s({ user: ref('User'), token: { type: 'string', description: 'JWT, gửi lại trong header Authorization: Bearer <token>' } }),
@@ -97,6 +98,21 @@ const schemas = {
     data: ref('Task'),
     nextOccurrence: { ...nullable(s({ _id: str, deadline: date })), description: 'Có khi hoàn thành một việc lặp lại: lần kế tiếp vừa được tạo' },
   }),
+  AdminUser: s({
+    _id: str,
+    name: str,
+    email: str,
+    role: { type: 'string', enum: ['user', 'admin'] },
+    envAdmin: { type: 'boolean', description: 'Là admin nhờ biến ADMIN_EMAILS' },
+    disabled: bool,
+    isDemo: bool,
+    hasPassword: bool,
+    google: bool,
+    projects: int,
+    tasks: int,
+    createdAt: date,
+    lastLoginAt: nullable(date),
+  }),
   Comment: s({ _id: str, task: str, text: str, author: ref('Member'), mine: bool, createdAt: date }),
   Activity: s({
     _id: str,
@@ -135,6 +151,7 @@ export function buildOpenApi() {
       { name: 'Bình luận, ảnh, Pomodoro' },
       { name: 'Thống kê' },
       { name: 'Xuất, nhập dữ liệu' },
+      { name: 'Quản trị', description: 'Chỉ tài khoản admin (role admin hoặc email trong ADMIN_EMAILS)' },
     ],
     components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } }, schemas },
     paths: {
@@ -333,6 +350,60 @@ export function buildOpenApi() {
           ...secured,
           requestBody: body({ type: 'object', description: 'Nội dung file JSON từ /api/export' }),
           responses: { 201: ok(s({ projects: int, tasks: int })), 400: E[400], 403: err('Tài khoản demo không nhập được'), 413: err('File quá lớn (tối đa 5 MB)') },
+        }),
+      },
+
+      '/api/admin/stats': {
+        get: op('Quản trị', 'Thống kê toàn hệ thống (chỉ admin)', { ...secured, parameters: [tz], responses: { 200: ok({ type: 'object' }), 403: E[403] } }),
+      },
+      '/api/admin/activity': {
+        get: op('Quản trị', 'Hoạt động mới nhất của mọi người dùng', {
+          ...secured,
+          parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer', maximum: 100 } }],
+          responses: { 200: ok(arr(ref('Activity'))), 403: E[403] },
+        }),
+      },
+      '/api/admin/users': {
+        get: op('Quản trị', 'Danh sách người dùng', {
+          ...secured,
+          parameters: [
+            { name: 'q', in: 'query', schema: str, description: 'Tìm theo tên hoặc email' },
+            { name: 'filter', in: 'query', schema: { type: 'string', enum: ['all', 'admin', 'disabled', 'google', 'demo'] } },
+            { name: 'sort', in: 'query', schema: { type: 'string', enum: ['newest', 'active', 'name'] } },
+            { name: 'page', in: 'query', schema: int },
+            { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 100 } },
+          ],
+          responses: { 200: ok(arr(ref('AdminUser'))), 403: E[403] },
+        }),
+      },
+      '/api/admin/users/{id}': {
+        parameters: [idParam()],
+        patch: op('Quản trị', 'Khoá, mở khoá hoặc đổi quyền một tài khoản', {
+          ...secured,
+          requestBody: body(s({ disabled: bool, role: { type: 'string', enum: ['user', 'admin'] } })),
+          responses: { 200: ok(ref('AdminUser')), 400: E[400], 403: E[403], 404: E[404] },
+        }),
+        delete: op('Quản trị', 'Xoá hẳn tài khoản và dữ liệu của họ', { ...secured, responses: { 200: ok(s({ deletedProjects: int, deletedTasks: int })), 400: E[400], 404: E[404] } }),
+      },
+      '/api/admin/images': {
+        get: op('Quản trị', 'Ảnh đã lưu trên Cloudinary (thư mục taskflow/) và nơi đang dùng', {
+          ...secured,
+          description: 'Cần CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET. Chưa có thì trả về configured: false.',
+          parameters: [
+            { name: 'filter', in: 'query', schema: { type: 'string', enum: ['all', 'used', 'unused'] } },
+            { name: 'kind', in: 'query', schema: { type: 'string', enum: ['all', 'tasks', 'avatars', 'other'] } },
+            { name: 'q', in: 'query', schema: str },
+            { name: 'page', in: 'query', schema: int },
+            { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 200 } },
+            { name: 'refresh', in: 'query', schema: { type: 'string', enum: ['1'] }, description: 'Bỏ qua bộ nhớ tạm 60 giây' },
+          ],
+          responses: { 200: ok({ type: 'object' }), 403: E[403] },
+        }),
+        delete: op('Quản trị', 'Xoá ảnh trên Cloudinary', {
+          ...secured,
+          description: 'Ảnh đang dùng chỉ xoá khi force = true: ảnh được gỡ khỏi công việc và ảnh đại diện trước khi xoá.',
+          requestBody: body(s({ publicIds: arr(str), force: bool }, ['publicIds'])),
+          responses: { 200: ok(s({ deleted: arr(str), notFound: arr(str), detached: int, avatarsCleared: int })), 400: E[400], 409: err('Có ảnh đang được dùng'), 503: err('Chưa cấu hình khoá Cloudinary') },
         }),
       },
     },

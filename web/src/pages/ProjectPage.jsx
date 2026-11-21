@@ -7,6 +7,7 @@ import {
   FolderX,
   KanbanSquare,
   List,
+  LogOut,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -17,7 +18,9 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
+import { useAuth } from '../components/auth/AuthContext.jsx';
 import Board from '../components/project/Board.jsx';
+import { ShareButton } from '../components/project/Members.jsx';
 import CalendarView from '../components/project/CalendarView.jsx';
 import ListView from '../components/project/ListView.jsx';
 import { ActiveFilters, EMPTY_FILTERS, FilterButton, SortSelect, applyFilters, tagsOf } from '../components/task/Filters.jsx';
@@ -30,7 +33,7 @@ import { ConfirmDialog, EmptyState, Menu, Skeleton } from '../components/ui/Over
 import { ProjectTile } from '../components/ui/Pills.jsx';
 import Segmented from '../components/ui/Segmented.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
-import { useClearDone, useDeleteProject, useProject, useSaveProject, useTasks } from '../hooks/queries.js';
+import { useClearDone, useDeleteProject, useMemberActions, useProject, useSaveProject, useTasks } from '../hooks/queries.js';
 import { hueOf, hueStyle } from '../lib/constants.js';
 import { usePersistentState } from '../lib/theme.js';
 import { fold } from '../lib/text.js';
@@ -58,7 +61,10 @@ function Header({ project, tasks }) {
   const clearDone = useClearDone();
   const notify = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { remove: removeMember } = useMemberActions(project._id);
   const [confirm, setConfirm] = useState(null);
+  const owner = project.role !== 'member';
 
   const s = useMemo(() => {
     const now = Date.now();
@@ -103,6 +109,7 @@ function Header({ project, tasks }) {
                 {project.archived && <span className="tone-warning rounded-full px-2 py-0.5 font-sans text-[11px] font-semibold">{tr('Đã lưu trữ')}</span>}
               </h1>
               <p className="mt-1 line-clamp-2 max-w-xl text-[13px] text-muted">{project.description || tr('Chưa có mô tả cho dự án này.')}</p>
+              {!owner && project.ownerInfo && <p className="mt-1 text-xs text-faint">{tr('Được chia sẻ bởi {name}', { name: project.ownerInfo.name })}</p>}
             </div>
           </div>
         </div>
@@ -118,25 +125,30 @@ function Header({ project, tasks }) {
               <Stat label={tr('Trễ hạn')} value={s.overdue} tone={s.overdue ? 'text-danger' : ''} />
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => editProject(project)}
-              className="grid size-10 place-items-center rounded-xl border border-line bg-surface/70 text-muted backdrop-blur hover:text-ink"
-              aria-label={tr('Sửa dự án')}
-            >
-              <Pencil className="size-4" />
-            </button>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ShareButton project={project} />
+            {owner && (
+              <button
+                type="button"
+                onClick={() => editProject(project)}
+                className="grid size-10 place-items-center rounded-xl border border-line bg-surface/70 text-muted backdrop-blur hover:text-ink"
+                aria-label={tr('Sửa dự án')}
+              >
+                <Pencil className="size-4" />
+              </button>
+            )}
             <div className="rounded-xl border border-line bg-surface/70 backdrop-blur [&>div>button]:size-10">
               <Menu
                 label={tr('Tuỳ chọn dự án')}
                 trigger={<MoreHorizontal className="size-4" />}
                 items={[
                   s.done > 0 && { label: tr('Dọn {done} việc đã xong', { done: s.done }), icon: Eraser, onClick: () => setConfirm('clear') },
-                  project.archived
-                    ? { label: tr('Khôi phục dự án'), icon: ArchiveRestore, onClick: () => archive(false) }
-                    : { label: tr('Lưu trữ dự án'), icon: Archive, onClick: () => archive(true) },
-                  { label: tr('Xoá dự án'), icon: Trash2, danger: true, onClick: () => setConfirm('delete') },
+                  owner &&
+                    (project.archived
+                      ? { label: tr('Khôi phục dự án'), icon: ArchiveRestore, onClick: () => archive(false) }
+                      : { label: tr('Lưu trữ dự án'), icon: Archive, onClick: () => archive(true) }),
+                  owner && { label: tr('Xoá dự án'), icon: Trash2, danger: true, onClick: () => setConfirm('delete') },
+                  !owner && { label: tr('Rời dự án'), icon: LogOut, danger: true, onClick: () => setConfirm('leave') },
                 ]}
               />
             </div>
@@ -161,6 +173,22 @@ function Header({ project, tasks }) {
           remove.mutate(project._id, {
             onSuccess: () => {
               notify({ message: tr('Đã xoá “{name}”', { name: project.name }) });
+              navigate('/projects');
+            },
+            onError: (err) => notify({ tone: 'error', message: err.message }),
+          })
+        }
+      />
+      <ConfirmDialog
+        open={confirm === 'leave'}
+        onClose={() => setConfirm(null)}
+        title={tr('Rời dự án “{name}”?', { name: project.name })}
+        body={tr('Bạn sẽ không xem được dự án này nữa cho tới khi chủ dự án mời lại.')}
+        confirmLabel={tr('Rời dự án')}
+        onConfirm={() =>
+          removeMember.mutate(user._id, {
+            onSuccess: () => {
+              notify({ message: tr('Đã rời dự án “{name}”', { name: project.name }) });
               navigate('/projects');
             },
             onError: (err) => notify({ tone: 'error', message: err.message }),

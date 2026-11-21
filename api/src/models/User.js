@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { env } from '../config/env.js';
 import { PROJECT_COLORS } from './Project.js';
 
 export const AVATAR_MAX_LENGTH = 60_000;
@@ -47,6 +48,11 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: { type: Date, default: null },
     // Tài khoản demo công khai: không cho đổi mật khẩu, sửa hồ sơ hay xoá để người sau vẫn vào được
     isDemo: { type: Boolean, default: false },
+    // Quản trị viên vào được trang admin. Email trong biến ADMIN_EMAILS luôn là admin.
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    // Tài khoản bị quản trị viên khoá: không đăng nhập và không gọi API được nữa
+    disabled: { type: Boolean, default: false },
+    disabledAt: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -66,6 +72,10 @@ const userSchema = new mongoose.Schema(
 
 export const User = mongoose.model('User', userSchema);
 
+/** Admin từ biến môi trường ADMIN_EMAILS (không đổi được trên trang quản trị). */
+export const isEnvAdmin = (user) => !!user?.email && env.adminEmails.includes(String(user.email).toLowerCase());
+export const isAdmin = (user) => !!user && (user.role === 'admin' || isEnvAdmin(user));
+
 /** Dữ liệu người dùng an toàn để gửi cho client. */
 export function publicUser(user) {
   return {
@@ -77,6 +87,7 @@ export function publicUser(user) {
     accentColor: user.accentColor || 'blue',
     isDemo: !!user.isDemo,
     hasPassword: user.passwordSet !== false,
+    role: isAdmin(user) ? 'admin' : 'user',
     createdAt: user.createdAt,
   };
 }

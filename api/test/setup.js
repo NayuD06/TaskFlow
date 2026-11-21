@@ -12,4 +12,7 @@ process.env.RESEND_API_KEY = '';
 process.env.GOOGLE_CLIENT_ID = 'test-client.apps.googleusercontent.com';
 process.env.CLOUDINARY_CLOUD_NAME = 'taskflow-test';
 process.env.CLOUDINARY_UPLOAD_PRESET = 'taskflow_unsigned';
+process.env.CLOUDINARY_API_KEY = 'test-key';
+process.env.CLOUDINARY_API_SECRET = 'test-secret';
+process.env.ADMIN_EMAILS = 'boss@example.com, Boss2@Example.com';
 process.env.SENTRY_DSN = '';

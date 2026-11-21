@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router';
 import { firstName, useAuth } from '../components/auth/AuthContext.jsx';
 import AuthLayout, { Banner } from '../components/auth/AuthLayout.jsx';
 import { PasswordField, TextField } from '../components/auth/Fields.jsx';
+import GoogleButton, { useGoogleEnabled } from '../components/auth/GoogleButton.jsx';
 import { useToast } from '../components/ui/Toasts.jsx';
 import { tr } from '../lib/i18n.js';
 
@@ -13,7 +14,8 @@ const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
-  const { login, reason } = useAuth();
+  const { login, googleLogin, reason } = useAuth();
+  const google = useGoogleEnabled();
   const notify = useToast();
   const [params] = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -39,6 +41,23 @@ export default function Login() {
       shake();
       if (err.fields && err.status === 400) setErrors(err.fields);
       else setBanner({ tone: 'danger', text: err.status === 0 ? tr('Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.') : err.message });
+    }
+  };
+
+  const withGoogle = async (credential) => {
+    setLoading('google');
+    setBanner(null);
+    try {
+      const { user, created } = await googleLogin(credential);
+      notify({
+        tone: 'success',
+        message: created
+          ? tr('Chào mừng {name}! Đã có sẵn một dự án mẫu cho bạn.', { name: firstName(user.name) })
+          : tr('Chào mừng trở lại, {name}!', { name: firstName(user.name) }),
+      });
+    } catch (err) {
+      setLoading(null);
+      setBanner({ tone: 'danger', text: err.status === 0 ? tr('Không kết nối được tới máy chủ. Hãy thử lại sau ít giây.') : err.message });
     }
   };
 
@@ -88,6 +107,14 @@ export default function Login() {
           autoFocus
         />
         <PasswordField
+          aside={
+            <Link
+              to={`/forgot-password${EMAIL_RE.test(form.email.trim()) ? `?email=${encodeURIComponent(form.email.trim())}` : ''}`}
+              className="text-xs font-semibold text-accent-hi hover:underline"
+            >
+              {tr('Quên mật khẩu?')}
+            </Link>
+          }
           autoComplete="current-password"
           placeholder={tr('Nhập mật khẩu')}
           value={form.password}
@@ -109,27 +136,37 @@ export default function Login() {
         </button>
       </form>
 
-      {DEMO_EMAIL && DEMO_PASSWORD && (
-        <>
-          <div className="my-5 flex items-center gap-3 text-xs text-faint">
-            <span className="h-px flex-1 bg-line" /> {tr('hoặc')} <span className="h-px flex-1 bg-line" />
-          </div>
-          <button
-            type="button"
-            disabled={!!loading}
-            onClick={() => run(DEMO_EMAIL, DEMO_PASSWORD, 'demo')}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface text-[14px] font-semibold hover:border-accent/50 hover:bg-surface-2 disabled:opacity-70"
-          >
-            {loading === 'demo' ? (
-              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Sparkles className="size-4 text-accent-hi" aria-hidden="true" />
-            )}
-            {tr('Dùng thử bằng tài khoản demo')}
-          </button>
-          <p className="mt-2 text-center text-xs text-faint">{tr('Tài khoản demo dùng chung, dữ liệu có thể bị người khác thay đổi.')}</p>
-        </>
+      {(google || (DEMO_EMAIL && DEMO_PASSWORD)) && (
+        <div className="my-5 flex items-center gap-3 text-xs text-faint">
+          <span className="h-px flex-1 bg-line" /> {tr('hoặc')} <span className="h-px flex-1 bg-line" />
+        </div>
       )}
+      <div className="space-y-2.5">
+        <GoogleButton onCredential={withGoogle} disabled={!!loading} />
+        {loading === 'google' && (
+          <p className="flex items-center justify-center gap-2 text-xs text-muted" role="status">
+            <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> {tr('Đang đăng nhập bằng Google...')}
+          </p>
+        )}
+        {DEMO_EMAIL && DEMO_PASSWORD && (
+          <>
+            <button
+              type="button"
+              disabled={!!loading}
+              onClick={() => run(DEMO_EMAIL, DEMO_PASSWORD, 'demo')}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface text-[14px] font-semibold hover:border-accent/50 hover:bg-surface-2 disabled:opacity-70"
+            >
+              {loading === 'demo' ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Sparkles className="size-4 text-accent-hi" aria-hidden="true" />
+              )}
+              {tr('Dùng thử bằng tài khoản demo')}
+            </button>
+            <p className="text-center text-xs text-faint">{tr('Tài khoản demo dùng chung, dữ liệu có thể bị người khác thay đổi.')}</p>
+          </>
+        )}
+      </div>
     </AuthLayout>
   );
 }
