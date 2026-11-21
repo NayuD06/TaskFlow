@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { applyAccent } from '../../lib/accent.js';
 import { api, getToken, setToken, setUnauthorizedHandler } from '../../lib/api.js';
+import { setMonitoringUser } from '../../lib/monitoring.js';
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -57,6 +58,9 @@ export function AuthProvider({ children }) {
     return () => setUnauthorizedHandler(null);
   }, []);
 
+  const userId = state.user?._id;
+  useEffect(() => setMonitoringUser(userId), [userId]);
+
   // Màu nhấn theo tài khoản; khách (trang giới thiệu, đăng nhập) luôn dùng xanh dương
   const accent = state.user?.accentColor;
   useEffect(() => {
@@ -64,9 +68,15 @@ export function AuthProvider({ children }) {
     else if (state.status === 'guest') applyAccent(null);
   }, [accent, state.status]);
 
-  // Rời tài khoản thì xoá sạch dữ liệu đã cache để người sau không thấy
+  // Rời tài khoản thì xoá sạch dữ liệu đã cache (và đồng hồ Pomodoro) để người sau không thấy
   useEffect(() => {
-    if (state.status === 'guest') qc.clear();
+    if (state.status !== 'guest') return;
+    qc.clear();
+    try {
+      localStorage.removeItem('taskflow-pomodoro');
+    } catch {
+      /* bỏ qua */
+    }
   }, [state.status, qc]);
 
   const signIn = useCallback(
@@ -81,6 +91,15 @@ export function AuthProvider({ children }) {
 
   const login = useCallback((email, password) => api.auth.login({ email, password }).then(signIn), [signIn]);
   const register = useCallback((data) => api.auth.register(data).then(signIn), [signIn]);
+  /** Đăng nhập bằng Google. Trả về { user, created } để chào đúng câu. */
+  const googleLogin = useCallback(
+    (credential) =>
+      api.auth.google(credential).then((session) => {
+        signIn(session);
+        return session;
+      }),
+    [signIn],
+  );
 
   // reason 'logout': tự bấm đăng xuất, về thẳng trang đăng nhập (không kèm ?next=)
   const logout = useCallback(() => {
@@ -97,8 +116,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, login, register, logout, setUser, replaceToken, retry }),
-    [state, login, register, logout, setUser, replaceToken, retry],
+    () => ({ ...state, login, register, googleLogin, signIn, logout, setUser, replaceToken, retry }),
+    [state, login, register, googleLogin, signIn, logout, setUser, replaceToken, retry],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

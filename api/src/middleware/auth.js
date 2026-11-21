@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { verifyToken } from '../lib/auth.js';
-import { User } from '../models/User.js';
+import { User, isAdmin } from '../models/User.js';
+
+/** Lỗi 403 khi tài khoản đã bị quản trị viên khoá. */
+export function accountLocked() {
+  const err = new Error('Tài khoản đã bị khoá. Hãy liên hệ quản trị viên.');
+  err.status = 403;
+  err.code = 'account_locked';
+  return err;
+}
 
 function unauthorized(message = 'Bạn cần đăng nhập để tiếp tục') {
   const err = new Error(message);
@@ -25,6 +33,18 @@ export async function requireAuth(req, res, next) {
   // Tài khoản đã xoá, hoặc token cũ sau khi đổi mật khẩu / đăng xuất mọi thiết bị
   if (!user || (user.tokenVersion ?? 0) !== version) throw unauthorized('Phiên đăng nhập đã hết hạn, hãy đăng nhập lại');
 
+  if (user.disabled) throw accountLocked();
+
   req.user = user;
+  next();
+}
+
+/** Chỉ quản trị viên. Dùng sau requireAuth. */
+export function requireAdmin(req, res, next) {
+  if (!isAdmin(req.user)) {
+    const err = new Error('Bạn không có quyền vào trang quản trị');
+    err.status = 403;
+    throw err;
+  }
   next();
 }

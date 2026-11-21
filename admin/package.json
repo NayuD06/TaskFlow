@@ -1,0 +1,33 @@
+{
+  "name": "taskflow-admin",
+  "private": true,
+  "description": "Trang quản trị TaskFlow (React + Vite): thống kê, người dùng, ảnh Cloudinary",
+  "author": "Duy An (https://github.com/NayuD06)",
+  "license": "MIT",
+  "homepage": "https://github.com/NayuD06/TaskFlow#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NayuD06/TaskFlow.git",
+    "directory": "admin"
+  },
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.107.1",
+    "lucide-react": "1.70.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "7.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.5",
+    "@vitejs/plugin-react": "6.2.1",
+    "tailwindcss": "4.3.5",
+    "vite": "8.3.6"
+  }
+}

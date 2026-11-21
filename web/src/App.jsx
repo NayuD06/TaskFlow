@@ -6,6 +6,8 @@ import { PageFallback } from './components/ui/Overlay.jsx';
 
 // Mỗi trang là một file JS riêng, chỉ tải khi mở tới (trang đầu mở nhanh hơn)
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
 const MyTasks = lazy(() => import('./pages/MyTasks.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
@@ -27,7 +29,10 @@ export default function App() {
         <Route element={<GuestOnly />}>
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
         </Route>
+        {/* Mở từ email nên vào được cả khi đang đăng nhập ở máy này */}
+        <Route path="reset-password" element={<ResetPassword />} />
         <Route
           element={
             <RequireAuth>

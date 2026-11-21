@@ -7,12 +7,14 @@ Hướng dẫn này đưa TaskFlow lên mạng **miễn phí** bằng 3 dịch v
 | Cơ sở dữ liệu | **MongoDB Atlas** | Lưu người dùng, dự án, công việc, hoạt động |
 | `api/` | **Render** | Server Express: đăng nhập, kiểm tra quyền, nói chuyện với Atlas |
 | `web/` | **Vercel** | Giao diện React mà mọi người mở trên trình duyệt |
+| `admin/` | **Vercel** (project thứ hai) | Trang quản trị: thống kê, người dùng, ảnh đã lưu trên Cloudinary |
 
 ```
-Trình duyệt ──► Vercel (web) ──gọi API kèm token──► Render (api) ──► MongoDB Atlas
+Trình duyệt ──► Vercel (web, admin) ──gọi API kèm token──► Render (api) ──► MongoDB Atlas
+                                                                  └──► Cloudinary, Brevo, Google, Sentry (không bắt buộc)
 ```
 
-**Thứ tự làm:** Atlas → đưa code lên GitHub → Render → Vercel → quay lại Render cho phép Vercel gọi API.
+**Thứ tự làm:** Atlas → đưa code lên GitHub → Render → Vercel → quay lại Render cho phép Vercel gọi API. Sau đó, khi nào muốn: trang quản trị (Bước 7) và các [tính năng thêm](#tính-năng-thêm-không-bắt-buộc) như lưu ảnh, gửi email, đăng nhập Google. Thiếu khoá của tính năng nào thì tính năng đó tự ẩn, app vẫn chạy bình thường.
 
 Mỗi người tự đăng ký tài khoản và chỉ thấy dự án, công việc của chính mình. Mật khẩu được mã hoá bằng bcrypt trước khi lưu, đăng nhập dùng JWT.
 
@@ -47,6 +49,23 @@ Bản này **không cần thêm biến môi trường nào** và **không có th
 2. Dữ liệu cũ vẫn dùng bình thường: công việc cũ chưa có nhãn, người dùng cũ dùng ảnh chữ cái và màu nhấn xanh dương như trước.
 3. (Không bắt buộc) Muốn tài khoản demo có sẵn nhãn mẫu thì seed lại theo bước 1.5. **Lưu ý**: seed xoá luôn mọi tài khoản người khác đã đăng ký.
 4. Sau khi deploy, nếu trình duyệt vẫn hiện giao diện cũ thì bấm **Ctrl + Shift + R** (hoặc đóng hẳn tab rồi mở lại) một lần. Web giờ có service worker (PWA) nên trình duyệt có thể giữ bản cũ đến lần mở sau.
+
+### Cập nhật bản 10 tính năng và trang quản trị (tháng 11/2026)
+
+Bản này thêm chia sẻ dự án, bình luận, ảnh đính kèm, việc lặp lại, Pomodoro, xuất và nhập dữ liệu, quên mật khẩu, đăng nhập Google, Swagger, báo lỗi Sentry và trang quản trị. **Có thư viện mới**, nên làm đủ các bước:
+
+1. Cài thư viện trên máy để có file `package-lock.json` mới (Render, Vercel cần file này):
+
+   ```powershell
+   npm run install:all
+   ```
+
+   (Hoặc chạy `npm install` lần lượt trong `api`, `web`, `admin`.)
+2. Đẩy code lên: `git add .` → `git commit -m "..."` → `git push`. Render và Vercel tự deploy lại. Chưa cần thêm biến nào: tính năng nào thiếu khoá thì tự ẩn.
+3. Nếu chưa làm: sửa `CORS_ORIGIN` trên Render đúng địa chỉ Vercel (bước 5).
+4. Deploy trang quản trị theo [Bước 7](#bước-7-deploy-trang-quản-trị).
+5. Bật thêm tính năng theo phần [Tính năng thêm](#tính-năng-thêm-không-bắt-buộc), mỗi cái mất 5 đến 10 phút. Nên làm theo thứ tự: Cloudinary (ảnh) → Brevo (email) → Google → Sentry.
+6. Dữ liệu cũ vẫn dùng bình thường, **không** cần seed lại. Mở `https://<địa-chỉ-API>/api/docs` để xem tài liệu API (Swagger).
 
 ---
 
@@ -339,8 +358,175 @@ Mở địa chỉ web ở bước 4:
 - [ ] Bấm **Đăng xuất** (góc dưới thanh bên trái), rồi **Đăng ký** một tài khoản mới: chỉ thấy 1 dự án hướng dẫn, **không** thấy 5 dự án của tài khoản demo.
 - [ ] Đăng nhập sai mật khẩu thì báo "Email hoặc mật khẩu không đúng".
 - [ ] Mở trên điện thoại vẫn dùng được.
+- [ ] Mở `https://taskflow-api-xxxx.onrender.com/api/docs` thấy trang tài liệu API (Swagger).
 
-Xong rồi đó! Gửi địa chỉ Vercel cho bạn bè xem thôi.
+Xong rồi đó! Gửi địa chỉ Vercel cho bạn bè xem thôi. Muốn có trang quản trị thì làm tiếp Bước 7.
+
+---
+
+## Bước 7. Deploy trang quản trị
+
+Trang quản trị (thư mục `admin/`) là một trang web riêng: xem số liệu toàn hệ thống, khoá hoặc xoá tài khoản, cấp quyền quản trị, và quản lý ảnh đã lưu trên Cloudinary. Nó được deploy thành **project Vercel thứ hai** từ cùng repo. Chỉ tài khoản quản trị viên đăng nhập được.
+
+### 7.1. Chọn quản trị viên đầu tiên
+
+1. Đăng ký tài khoản của bạn trên web TaskFlow (bằng mật khẩu hoặc Google) nếu chưa có.
+2. Render → service `taskflow-api` → tab **Environment** → **Add Environment Variable**:
+
+   | Key | Value |
+   | --- | --- |
+   | `ADMIN_EMAILS` | email tài khoản đó, ví dụ `ban@gmail.com`. Nhiều người thì cách nhau dấu phẩy: `ban@gmail.com,ban2@gmail.com` |
+
+3. **Save Changes**, đợi Render khởi động lại.
+
+- Email trong `ADMIN_EMAILS` **luôn** là quản trị viên. Trang quản trị không khoá, không xoá, không bỏ quyền được họ (để bạn không tự khoá mình ra ngoài).
+- Tài khoản demo (`demo@taskflow.dev`) có mật khẩu công khai nên **không bao giờ** được làm quản trị viên, kể cả khi lỡ điền vào đây.
+- Repo của bạn công khai nên dữ liệu mẫu (`npm run seed`) cố ý **không** tạo tài khoản admin nào.
+
+### 7.2. Tạo project Vercel thứ hai
+
+1. Vercel → **Add New...** → **Project** → **Import** lại đúng repo `taskflow` (một repo import được nhiều lần).
+2. Ở màn hình cấu hình:
+   - **Project Name**: `taskflow-admin`.
+   - **Root Directory**: **Edit** → chọn thư mục **`admin`** → **Continue**.
+   - **Environment Variables**:
+
+     | Key | Value |
+     | --- | --- |
+     | `VITE_API_URL` | địa chỉ API, giống hệt bên web (không có `/` cuối, không có `/api`) |
+     | `VITE_WEB_URL` | địa chỉ web ở bước 4 (không bắt buộc, để có nút "Mở TaskFlow") |
+
+3. **Deploy**. Xong sẽ có địa chỉ dạng `https://taskflow-admin-xxxx.vercel.app`. Copy vào Notepad, đây là **địa chỉ admin**.
+
+> Trang admin đã tự chặn Google tìm kiếm (`robots.txt`, header `noindex`) và không cho nhúng vào trang khác.
+
+### 7.3. Cho phép trang admin gọi API
+
+Render → `taskflow-api` → **Environment** → sửa `CORS_ORIGIN`, thêm dấu phẩy và địa chỉ admin. **Giữ địa chỉ web đứng đầu** (địa chỉ đầu tiên được dùng làm link trong email nếu chưa đặt `APP_URL`):
+
+```
+https://taskflow-xxxx.vercel.app,https://taskflow-admin-xxxx.vercel.app
+```
+
+**Save Changes**, đợi 1 đến 2 phút.
+
+### 7.4. Nút mở trang admin trong web (không bắt buộc)
+
+Vercel → project **web** → **Settings** → **Environment Variables** → thêm `VITE_ADMIN_URL` = địa chỉ admin → **Deployments** → **Redeploy**. Tài khoản quản trị viên sẽ thấy nút **Trang quản trị** trong trang Tài khoản (người thường không thấy).
+
+### Kiểm tra
+
+- [ ] Mở địa chỉ admin, đăng nhập bằng tài khoản trong `ADMIN_EMAILS`: thấy trang **Tổng quan** có số liệu, 2 biểu đồ 14 ngày, danh sách tính năng đang bật.
+- [ ] Đăng nhập bằng `demo@taskflow.dev` thì bị từ chối: "Tài khoản này không có quyền quản trị".
+- [ ] Trang **Người dùng** thấy mọi tài khoản. Thử khoá tài khoản `minh@taskflow.dev`, rồi đăng nhập bằng tài khoản đó trên web: báo "Tài khoản đã bị khoá". Mở khoá lại.
+- [ ] Trang **Ảnh Cloudinary**: đã làm phần [Cloudinary](#1-lưu-ảnh-cloudinary) đủ 4 biến thì thấy danh sách ảnh, chưa thì thấy hướng dẫn lấy khoá.
+
+**Thêm quản trị viên khác** (không cần sửa Render): trang **Người dùng** → bấm nút `...` cạnh người đó → **Cấp quyền quản trị**. Hoặc chạy trên máy (file `api/.env` trỏ tới Atlas như bước 1.5):
+
+```powershell
+cd api
+npm run make-admin -- email-cua-ho@gmail.com
+# Bỏ quyền: npm run make-admin -- email-cua-ho@gmail.com --remove
+```
+
+---
+
+## Tính năng thêm (không bắt buộc)
+
+Mỗi tính năng dưới đây cần khoá của một dịch vụ bên ngoài (đều có gói miễn phí). Thêm khoá vào Render → `taskflow-api` → **Environment** → **Save Changes**, Render tự khởi động lại là tính năng hiện ra, **không** cần deploy lại web. Trang quản trị (mục "Tính năng trên máy chủ") cho biết tính năng nào đang bật.
+
+| Tính năng | Dịch vụ | Biến trên Render |
+| --- | --- | --- |
+| Ảnh đính kèm, ảnh đại diện, trang quản lý ảnh | Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_UPLOAD_PRESET`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
+| Quên mật khẩu, email mời vào dự án | Brevo (hoặc Resend) | `MAIL_FROM`, `BREVO_API_KEY` (hoặc `RESEND_API_KEY`), `APP_URL` |
+| Đăng nhập bằng Google | Google Cloud | `GOOGLE_CLIENT_ID` |
+| Báo lỗi tự động | Sentry | `SENTRY_DSN` (và `VITE_SENTRY_DSN` trên Vercel) |
+
+> Các khoá này là bí mật (trừ Cloud name, tên preset, Google Client ID và Sentry DSN vốn công khai). Chỉ dán vào Render, **không** đưa lên GitHub, **không** đưa vào Vercel.
+
+### 1. Lưu ảnh: Cloudinary
+
+Ảnh được tải thẳng từ trình duyệt lên Cloudinary (không đi qua Render nên không tốn băng thông server), Atlas chỉ lưu đường link.
+
+1. Đăng ký miễn phí ở https://cloudinary.com (bấm **Sign up for free**, dùng Google hoặc GitHub cho nhanh). Nếu được hỏi dùng để làm gì, chọn gì cũng được.
+2. **Lấy Cloud name**: ở trang **Dashboard** (hoặc **Settings** → **Product environment**) có dòng **Cloud name**, ví dụ `dxyz123ab`. Copy.
+3. **Tạo upload preset không ký**: **Settings** (bánh răng góc dưới bên trái) → **Upload** (hoặc **Upload presets**) → **Add upload preset**:
+   - **Upload preset name**: `taskflow_unsigned` (tên gì cũng được, nhớ tên này).
+   - **Signing mode**: chọn **Unsigned**. Bắt buộc, vì trình duyệt không được biết khoá bí mật.
+   - **Asset folder** để trống: app tự cho ảnh vào thư mục `taskflow/tasks` và `taskflow/avatars`.
+   - Nếu có mục giới hạn định dạng (**Allowed formats**), điền `jpg, jpeg, png, webp, gif` để người lạ không tải loại file khác lên.
+   - **Save**.
+4. **Lấy API Key và API Secret** (cho trang quản trị xem và xoá ảnh): **Settings** → **API Keys**. Copy cột **API Key**, bấm biểu tượng con mắt ở cột **API Secret** để hiện rồi copy. Chưa có dòng nào thì bấm **Generate New API Key**.
+5. Render → **Environment**, thêm 4 biến rồi **Save Changes**:
+
+   | Key | Value |
+   | --- | --- |
+   | `CLOUDINARY_CLOUD_NAME` | Cloud name ở bước 2 |
+   | `CLOUDINARY_UPLOAD_PRESET` | `taskflow_unsigned` |
+   | `CLOUDINARY_API_KEY` | API Key |
+   | `CLOUDINARY_API_SECRET` | API Secret (bí mật) |
+
+**Kiểm tra:** mở một công việc trên web thấy mục **Ảnh đính kèm**, kéo một ảnh vào là ảnh hiện lên và có ảnh bìa trên thẻ Kanban. Vào Cloudinary → **Media Library** thấy ảnh nằm trong thư mục `taskflow`. Trang quản trị → **Ảnh Cloudinary** thấy ảnh đó kèm tên công việc đang dùng nó.
+
+- Chỉ cần 2 biến đầu là tải ảnh được. 2 biến sau chỉ cho trang quản trị.
+- Gói miễn phí có 25 "credits" mỗi tháng (1 credit khoảng 1 GB lưu trữ hoặc 1 GB băng thông). Trang quản trị hiện số đã dùng. Thỉnh thoảng bấm **Dọn dẹp** để xoá ảnh không còn công việc nào dùng.
+- Trang quản trị chỉ đụng tới ảnh trong thư mục `taskflow/`. Ảnh khác trong tài khoản Cloudinary của bạn được để yên.
+
+### 2. Gửi email: Brevo
+
+Render bản miễn phí chặn cổng SMTP, nên app gửi email qua API của **Brevo** (miễn phí khoảng 300 email mỗi ngày, gửi được từ địa chỉ Gmail của bạn).
+
+1. Đăng ký ở https://www.brevo.com (gói **Free**). Brevo hỏi vài thông tin, phần công ty điền tên bạn là được, và có thể cần xác minh số điện thoại.
+2. **Xác minh người gửi**: bấm tên tài khoản (góc trên bên phải) → **Senders, Domains & Dedicated IPs** → tab **Senders** → **Add sender**. Name `TaskFlow`, Email là email của bạn (Gmail được) → Brevo gửi mã hoặc link xác nhận vào email đó, bấm xác nhận.
+3. **Tạo khoá API**: tên tài khoản → **SMTP & API** → tab **API Keys** → **Generate a new API key**, đặt tên `taskflow` → copy khoá (bắt đầu bằng `xkeysib-`). Khoá chỉ hiện **một lần**.
+4. Render → **Environment**, thêm rồi **Save Changes**:
+
+   | Key | Value |
+   | --- | --- |
+   | `MAIL_FROM` | `TaskFlow <email-vừa-xác-minh@gmail.com>` (đúng email ở bước 2) |
+   | `BREVO_API_KEY` | khoá ở bước 3 |
+   | `APP_URL` | địa chỉ web, ví dụ `https://taskflow-xxxx.vercel.app` (để link trong email mở đúng trang) |
+
+**Kiểm tra:** trang đăng nhập → **Quên mật khẩu?** → nhập email tài khoản của bạn → trong vài phút nhận được email có nút đặt lại mật khẩu. Thử mời một người vào dự án: họ nhận được email mời.
+
+- Email gửi từ Gmail qua dịch vụ khác hay rơi vào **Thư rác** hoặc **Quảng cáo**. Nếu có tên miền riêng, xác minh tên miền trong Brevo (tab **Domains**) để email vào hộp thư chính.
+- Brevo có thể chặn khoá API khi thấy địa chỉ IP lạ (Render đổi IP thường xuyên). Nếu Logs Render có dòng `[mail] Gửi email thất bại` kèm chữ `IP`, vào Brevo → **Security** → **Authorised IPs** và tắt chặn IP.
+
+**Dùng Resend thay Brevo:** đăng ký https://resend.com → **API Keys** → **Create API Key** → đặt biến `RESEND_API_KEY` (bỏ `BREVO_API_KEY`). Resend chỉ gửi được tới người khác khi bạn đã xác minh **tên miền riêng** (mục **Domains**), và `MAIL_FROM` phải thuộc tên miền đó, ví dụ `TaskFlow <no-reply@ten-mien-cua-ban.com>`. Chưa có tên miền thì nên dùng Brevo.
+
+### 3. Đăng nhập bằng Google
+
+1. Vào https://console.cloud.google.com, đăng nhập Gmail. Đồng ý điều khoản nếu được hỏi.
+2. Thanh trên cùng bấm ô chọn project → **New Project** → tên `TaskFlow` → **Create**. Đợi xong thì chọn project vừa tạo.
+3. Menu ☰ → **APIs & Services** → **OAuth consent screen** (giao diện mới gọi là **Google Auth Platform**) → **Get started**:
+   - **App name** `TaskFlow`, **User support email** là email của bạn.
+   - **Audience**: chọn **External**.
+   - **Contact information**: email của bạn → đồng ý chính sách → **Create**.
+4. Mục **Audience**: nếu **Publishing status** là **Testing** thì chỉ email trong danh sách **Test users** đăng nhập được. Bấm **Publish app** → **Confirm** để ai cũng đăng nhập được. App chỉ xin tên, email và ảnh nên không phải chờ Google duyệt.
+5. Mục **Clients** → **Create client** (giao diện cũ: **Credentials** → **Create Credentials** → **OAuth client ID**):
+   - **Application type**: **Web application**, Name `TaskFlow web`.
+   - **Authorized JavaScript origins** → **Add URI**, thêm từng dòng:
+     - địa chỉ web, ví dụ `https://taskflow-xxxx.vercel.app` (không có `/` cuối)
+     - `http://localhost:5173` và `http://localhost` (để thử ở máy)
+   - **Authorized redirect URIs**: để trống.
+   - **Create** → copy **Client ID** (dạng `1234567890-abc...apps.googleusercontent.com`). Không cần Client secret.
+6. Render → **Environment**: thêm `GOOGLE_CLIENT_ID` = Client ID → **Save Changes**.
+
+**Kiểm tra:** tải lại trang đăng nhập, thấy nút **Đăng nhập bằng Google**. Bấm vào, chọn tài khoản Google, vào thẳng trang Tổng quan. Nếu email Google trùng tài khoản đã đăng ký thì hai cái được nối với nhau.
+
+- Google có thể mất từ 5 phút tới vài giờ mới nhận địa chỉ vừa thêm vào **Authorized JavaScript origins**.
+- Gắn tên miền riêng sau này thì nhớ thêm tên miền đó vào **Authorized JavaScript origins**.
+
+### 4. Báo lỗi: Sentry
+
+Khi web hoặc API gặp lỗi, Sentry gửi email cho bạn kèm chỗ lỗi. App không gửi mật khẩu, token hay nội dung request lên Sentry.
+
+1. Đăng ký https://sentry.io (gói **Developer** miễn phí).
+2. **Projects** → **Create Project** → chọn **Node.js** (hoặc **Express**) → tên `taskflow-api` → **Create Project**. Copy **DSN** (dạng `https://abc123@o12345.ingest.sentry.io/678`). Bỏ qua phần hướng dẫn cài đặt, code đã có sẵn. Mất DSN thì xem lại ở **Project Settings** → **Client Keys (DSN)**.
+3. Render → **Environment**: thêm `SENTRY_DSN` = DSN đó → **Save Changes**.
+4. (Không bắt buộc) Tạo thêm project **React** tên `taskflow-web`, copy DSN → Vercel → project **web** → **Settings** → **Environment Variables** → `VITE_SENTRY_DSN` → **Redeploy**.
+
+**Kiểm tra:** trang quản trị → Tổng quan → mục "Tính năng trên máy chủ" thấy **Báo lỗi Sentry: Đang bật**.
 
 ---
 
@@ -382,6 +568,21 @@ Xong rồi đó! Gửi địa chỉ Vercel cho bạn bè xem thôi.
 | Đã deploy nhưng web vẫn hiện giao diện cũ | Service worker còn giữ bản cũ | Bấm **Ctrl + Shift + R**, hoặc F12 → **Application** → **Service workers** → **Unregister** rồi tải lại |
 | Chia sẻ link lên Facebook không hiện ảnh xem trước | Facebook lưu đệm bản cũ | Dán link vào https://developers.facebook.com/tools/debug → **Scrape Again** |
 | Bật "Báo trước 1 giờ" nhưng không thấy thông báo | Trình duyệt đang chặn thông báo của trang | Bấm biểu tượng ổ khoá cạnh thanh địa chỉ → **Notifications** → **Allow** |
+| Render build lỗi `npm ci` sau khi cập nhật bản mới | `package-lock.json` chưa khớp thư viện mới | Chạy `npm run install:all` trên máy, commit các file `package-lock.json` rồi push |
+| Trang admin báo không kết nối được, Console có `blocked by CORS policy` | `CORS_ORIGIN` chưa có địa chỉ admin | Thêm địa chỉ admin vào `CORS_ORIGIN` như bước 7.3 |
+| Đăng nhập trang admin báo "không có quyền quản trị" | Email không có trong `ADMIN_EMAILS`, gõ sai, hoặc chưa **Save Changes** | Sửa `ADMIN_EMAILS` trên Render cho đúng email tài khoản, đợi Render khởi động lại rồi đăng nhập lại |
+| Vercel project admin build lỗi hoặc trang trắng | Root Directory chưa đặt là `admin` | Project admin → Settings → **Build and Deployment** → Root Directory = `admin`, rồi Redeploy |
+| Đăng nhập web báo "Tài khoản đã bị khoá" | Quản trị viên đã khoá tài khoản này | Vào trang quản trị → **Người dùng** → `...` → **Mở khoá tài khoản** |
+| Không thấy mục Ảnh đính kèm, không đổi được ảnh đại diện bằng ảnh | Thiếu `CLOUDINARY_CLOUD_NAME` hoặc `CLOUDINARY_UPLOAD_PRESET` | Thêm theo phần Cloudinary, rồi tải lại web |
+| Tải ảnh báo lỗi `Upload preset must be whitelisted for unsigned uploads` hoặc `not found` | Preset chưa ở chế độ **Unsigned**, hoặc gõ sai tên preset | Cloudinary → Settings → Upload → sửa preset thành **Unsigned**, kiểm tra lại tên |
+| Trang Ảnh Cloudinary báo "Cloudinary từ chối khoá API" | Sai `CLOUDINARY_API_KEY` hoặc `CLOUDINARY_API_SECRET` | Copy lại ở Cloudinary → Settings → API Keys, chú ý không thừa khoảng trắng |
+| Trang Ảnh Cloudinary báo "Đã gọi Cloudinary quá nhiều lần" | Gói miễn phí giới hạn khoảng 500 lần gọi quản trị mỗi giờ | Đợi khoảng 1 giờ. Trang đã tự lưu đệm danh sách 1 phút để đỡ tốn lượt |
+| Trang Quên mật khẩu báo máy chủ chưa bật gửi email | Thiếu `MAIL_FROM` hoặc khoá Brevo/Resend | Thêm theo phần Brevo |
+| Bấm gửi nhưng không nhận được email | Email vào Thư rác, người gửi chưa xác minh, hoặc Brevo chặn IP | Xem cả Thư rác. Logs Render tìm dòng `[mail]` để biết lỗi. Xem lại phần Brevo |
+| Link trong email mở ra `localhost` | Chưa đặt `APP_URL` và `CORS_ORIGIN` có `localhost` đứng đầu | Đặt `APP_URL` = địa chỉ web trên Render |
+| Không thấy nút Đăng nhập bằng Google | Thiếu `GOOGLE_CLIENT_ID` | Thêm theo phần Google, rồi tải lại trang |
+| Bấm nút Google báo `origin_mismatch` hoặc "origin is not allowed" | Địa chỉ web chưa có trong **Authorized JavaScript origins** | Thêm đúng địa chỉ (có `https://`, không có `/` cuối), đợi vài phút đến vài giờ |
+| Google báo "Access blocked" hoặc chỉ người trong danh sách thử mới đăng nhập được | App Google còn ở chế độ **Testing** | Google Auth Platform → **Audience** → **Publish app** |
 
 Mẹo: hầu hết lỗi đều thấy được ở 2 chỗ. **Logs** của service trên Render (lỗi phía API, database) và **F12 → Console / Network** trên trình duyệt (lỗi phía web, CORS, sai địa chỉ).
 
@@ -398,15 +599,23 @@ Mẹo: hầu hết lỗi đều thấy được ở 2 chỗ. **Logs** của serv
 - **Kiểm tra dữ liệu gửi lên** ở cả trình duyệt lẫn server (email hợp lệ, mật khẩu 8 ký tự trở lên có cả chữ và số, giới hạn độ dài).
 - **Helmet** thêm các header bảo mật, **CORS** chỉ cho địa chỉ web của bạn gọi API.
 - Báo lỗi đăng nhập chung chung ("Email hoặc mật khẩu không đúng") để người lạ không dò được email nào đã đăng ký.
+- **Chia sẻ dự án**: chỉ chủ dự án và thành viên được mời mới thấy dự án. Chỉ chủ dự án đổi tên, xoá dự án hay quản lý thành viên.
+- **Quản trị viên** chỉ là email trong `ADMIN_EMAILS` hoặc người được admin khác cấp quyền. Tài khoản demo không bao giờ là admin. Khoá một tài khoản thì mọi phiên đăng nhập của họ mất hiệu lực ngay.
+- **Khoá bí mật Cloudinary** chỉ nằm trên Render. Trình duyệt tải ảnh bằng preset không ký, API chỉ nhận link ảnh thuộc đúng tài khoản Cloudinary của bạn.
+- **Liên kết đặt lại mật khẩu** hết hạn sau 30 phút, chỉ dùng được một lần. Trang Quên mật khẩu luôn báo "đã gửi" để không lộ email nào đã đăng ký.
 
-Việc bạn cần giữ: không đưa `.env` hay `JWT_SECRET` lên GitHub, và không chạy lại `npm run seed` khi đã có người dùng thật.
+Việc bạn cần giữ: không đưa `.env`, `JWT_SECRET`, `CLOUDINARY_API_SECRET` hay khoá Brevo lên GitHub, và không chạy lại `npm run seed` khi đã có người dùng thật.
 
 ---
 
 ## Chi phí
 
-Cả 3 dịch vụ đều có gói miễn phí đủ cho dự án cá nhân (điều khoản có thể thay đổi theo thời gian, nên xem lại trang giá của từng bên):
+Các dịch vụ đều có gói miễn phí đủ cho dự án cá nhân (điều khoản có thể thay đổi theo thời gian, nên xem lại trang giá của từng bên):
 
 - **MongoDB Atlas M0**: miễn phí, dung lượng khoảng 512 MB, quá đủ cho hàng chục nghìn công việc.
 - **Render Free**: miễn phí, server ngủ sau khoảng 15 phút không dùng.
-- **Vercel Hobby**: miễn phí cho dự án cá nhân, không dùng cho mục đích thương mại.
+- **Vercel Hobby**: miễn phí cho dự án cá nhân, không dùng cho mục đích thương mại. Project web và project admin đều nằm trong gói này.
+- **Cloudinary Free**: 25 credits mỗi tháng, đủ cho vài nghìn ảnh đính kèm.
+- **Brevo Free**: khoảng 300 email mỗi ngày.
+- **Google đăng nhập**: miễn phí.
+- **Sentry Developer**: miễn phí cho 1 người, giới hạn số lỗi mỗi tháng.

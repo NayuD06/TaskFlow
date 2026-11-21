@@ -1,4 +1,17 @@
-import { Activity, ArrowRight, CircleCheckBig, CirclePlus, FolderPlus, MoveRight, PartyPopper, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  CircleCheckBig,
+  CirclePlus,
+  FolderPlus,
+  MessageSquare,
+  MoveRight,
+  PartyPopper,
+  RotateCcw,
+  Timer,
+  Trash2,
+  UserPlus,
+} from 'lucide-react';
 import { useUI } from '../shell/UIContext.jsx';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
@@ -148,7 +161,12 @@ const ACTIVITY = {
   task_moved: { icon: MoveRight, verb: tr('đã chuyển'), color: 'var(--accent-hi)' },
   task_deleted: { icon: Trash2, verb: tr('đã xoá'), color: 'var(--danger)' },
   project_created: { icon: FolderPlus, verb: tr('đã tạo dự án'), color: 'var(--accent-hi)' },
+  task_commented: { icon: MessageSquare, verb: tr('đã bình luận về'), color: 'var(--accent-hi)' },
+  pomodoro_completed: { icon: Timer, verb: tr('đã tập trung {n} phút cho'), color: 'var(--success)' },
+  member_joined: { icon: UserPlus, verb: tr('đã tham gia dự án'), color: 'var(--warning)' },
 };
+
+const PROJECT_LEVEL = ['project_created', 'member_joined'];
 
 export function ActivityCard() {
   const [type, setType] = useState('all');
@@ -175,6 +193,7 @@ export function ActivityCard() {
             { value: 'all', label: tr('Tất cả') },
             { value: 'completed', label: tr('Hoàn thành') },
             { value: 'created', label: tr('Tạo mới') },
+            { value: 'team', label: tr('Nhóm') },
           ]}
         />
       </div>
@@ -216,13 +235,14 @@ export function ActivityCard() {
                       </span>
                       <p className="text-[13px] leading-snug">
                         <span className="text-muted">
-                          {tr('Bạn')} {meta.verb}{' '}
+                          {a.mine === false && a.actorName ? <span className="font-semibold text-ink">{a.actorName}</span> : tr('Bạn')}{' '}
+                          {a.type === 'pomodoro_completed' ? tr('đã tập trung {n} phút cho', { n: a.to || 25 }) : meta.verb}{' '}
                         </span>
-                        <span className="font-medium">{a.type === 'project_created' ? a.projectName : a.taskTitle}</span>
+                        <span className="font-medium">{PROJECT_LEVEL.includes(a.type) ? a.projectName : a.taskTitle}</span>
                         {a.type === 'task_moved' && a.to && <span className="text-muted"> {tr('sang {status}', { status: STATUS[a.to]?.label })}</span>}
                       </p>
                       <p className="mt-0.5 flex items-center gap-2 text-xs text-faint" style={hueStyle(a.projectColor)}>
-                        {a.type !== 'project_created' && a.projectName && (
+                        {!PROJECT_LEVEL.includes(a.type) && a.projectName && (
                           <span className="flex items-center gap-1.5">
                             <span className="hue-dot size-1.5 rounded-full" />
                             {a.projectName}

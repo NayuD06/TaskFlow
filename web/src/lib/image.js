@@ -40,3 +40,20 @@ export async function avatarFromFile(file, size = 160) {
   }
   throw new Error(tr('Ảnh vẫn quá lớn sau khi nén, hãy thử ảnh khác'));
 }
+
+/** Ảnh đại diện vuông dạng File (để tải lên Cloudinary), lớn hơn bản lưu trực tiếp cho nét trên màn hình Retina. */
+export async function avatarBlobFromFile(file, size = 320) {
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) throw new Error(tr('Chỉ nhận ảnh PNG, JPG, WEBP hoặc GIF'));
+  if (file.size > 8 * 1024 * 1024) throw new Error(tr('Ảnh quá lớn, hãy chọn ảnh dưới 8 MB'));
+  const img = await loadImage(file);
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.88));
+  const out = blob || (await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.88)));
+  return new File([out], 'avatar.webp', { type: out.type || 'image/webp' });
+}

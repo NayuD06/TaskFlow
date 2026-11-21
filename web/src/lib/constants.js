@@ -54,3 +54,13 @@ export const SORT_OPTIONS = [
 /** Ảnh đại diện có sẵn (phải khớp AVATAR_EMOJIS ở api/src/models/User.js). */
 export const AVATAR_EMOJIS = ['🐳', '🐬', '🐙', '🦈', '🐢', '🦦', '🐧', '🦀', '🐠', '🪼', '🐋', '🦭'];
 export const AVATAR_MAX_LENGTH = 60_000;
+
+/** Việc lặp lại (khớp REPEATS ở api/src/models/Task.js). */
+export const REPEATS = ['none', 'daily', 'weekdays', 'weekly', 'monthly'];
+export const REPEAT = {
+  none: { label: tr('Không lặp lại'), short: '' },
+  daily: { label: tr('Hằng ngày'), short: tr('Hằng ngày') },
+  weekdays: { label: tr('Ngày làm việc (T2 đến T6)'), short: tr('T2 đến T6') },
+  weekly: { label: tr('Hằng tuần'), short: tr('Hằng tuần') },
+  monthly: { label: tr('Hằng tháng'), short: tr('Hằng tháng') },
+};

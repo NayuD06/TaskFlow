@@ -4,6 +4,8 @@ export const STATUSES = ['todo', 'doing', 'done'];
 export const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 export const MAX_TAGS = 8;
 export const MAX_TAG_LENGTH = 24;
+export const REPEATS = ['none', 'daily', 'weekdays', 'weekly', 'monthly'];
+export const MAX_ATTACHMENTS = 10;
 
 const checklistItemSchema = new mongoose.Schema(
   {
@@ -18,9 +20,22 @@ const checklistItemSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const attachmentSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true, maxlength: 500 },
+    publicId: { type: String, default: '', maxlength: 300 },
+    name: { type: String, default: '', trim: true, maxlength: 120 },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    bytes: { type: Number, default: 0 },
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { _id: true, timestamps: { createdAt: true, updatedAt: false } }
+);
+
 const taskSchema = new mongoose.Schema(
   {
-    // Lưu chủ sở hữu ngay trên task để lọc nhanh, không cần tra dự án
+    // Chủ dự án (người sở hữu dữ liệu). Thành viên được mời vẫn sửa được, quyền kiểm tra theo dự án.
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -70,6 +85,22 @@ const taskSchema = new mongoose.Schema(
       default: [],
       validate: [(v) => v.length <= MAX_TAGS, `Tối đa ${MAX_TAGS} nhãn cho một công việc`],
     },
+    // Việc lặp lại: khi hoàn thành sẽ tự tạo lần tiếp theo (repeatSpawned để không tạo trùng)
+    repeat: {
+      type: String,
+      enum: { values: REPEATS, message: 'Kiểu lặp lại không hợp lệ' },
+      default: 'none',
+    },
+    repeatSpawned: { type: Boolean, default: false },
+    attachments: {
+      type: [attachmentSchema],
+      default: [],
+      validate: [(v) => v.length <= MAX_ATTACHMENTS, `Tối đa ${MAX_ATTACHMENTS} ảnh cho một công việc`],
+    },
+    // Pomodoro: số phiên tập trung đã xong và tổng số phút
+    pomodoros: { type: Number, default: 0, min: 0 },
+    focusMinutes: { type: Number, default: 0, min: 0 },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true, versionKey: false }
 );

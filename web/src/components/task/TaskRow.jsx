@@ -3,7 +3,7 @@ import { useToggleTask } from '../../hooks/queries.js';
 import { PRIORITY } from '../../lib/constants.js';
 import { useUI } from '../shell/UIContext.jsx';
 import LiquidCheck from '../ui/LiquidCheck.jsx';
-import { ChecklistCount, DueChip, PriorityPill, ProjectTag, TagChips } from '../ui/Pills.jsx';
+import { ChecklistCount, DueChip, PriorityPill, ProjectTag, TagChips, TaskMeta } from '../ui/Pills.jsx';
 import { useToast } from '../ui/Toasts.jsx';
 import { tr } from '../../lib/i18n.js';
 
@@ -69,6 +69,7 @@ export default function TaskRow({ task, showProject = true, className = '' }) {
         <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
           {showProject && <ProjectTag project={task.project} className="max-w-40" />}
           <ChecklistCount checklist={task.checklist} />
+          <TaskMeta task={task} />
           <TagChips tags={task.tags} />
         </div>
       </div>

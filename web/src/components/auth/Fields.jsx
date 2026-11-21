@@ -1,6 +1,7 @@
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { forwardRef, useId, useState } from 'react';
+import { cloudinaryThumb } from '../../lib/cloudinary.js';
 import { hueOf } from '../../lib/constants.js';
 import { tr } from '../../lib/i18n.js';
 
@@ -149,10 +150,13 @@ export function PasswordStrength({ password }) {
 /** Ảnh đại diện: ảnh tải lên, emoji ("emoji:🐳") hoặc chữ cái cuối của tên trên nền màu. */
 export function Avatar({ user, size = 36, className = '' }) {
   const avatar = user?.avatar || '';
-  if (avatar.startsWith('data:image/'))
+  const isImage = avatar.startsWith('data:image/') || avatar.startsWith('https://res.cloudinary.com/');
+  if (isImage)
     return (
       <img
-        src={avatar}
+        src={avatar.startsWith('https://') ? cloudinaryThumb(avatar, Math.round(size * 2), Math.round(size * 2)) : avatar}
+        loading="lazy"
+        decoding="async"
         alt=""
         width={size}
         height={size}

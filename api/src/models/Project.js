@@ -43,10 +43,36 @@ const projectSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Người được chủ dự án mời vào cùng làm: xem và sửa công việc, bình luận
+    members: {
+      type: [
+        {
+          _id: false,
+          user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+          addedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+    // Lời mời gửi tới email chưa có tài khoản: tự vào dự án khi người đó đăng ký
+    invites: {
+      type: [
+        {
+          _id: false,
+          email: { type: String, required: true, lowercase: true, trim: true },
+          invitedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true, versionKey: false }
 );
 
+export const MAX_MEMBERS = 20;
+
 projectSchema.index({ owner: 1, archived: 1, updatedAt: -1 });
+projectSchema.index({ 'members.user': 1 });
+projectSchema.index({ 'invites.email': 1 });
 
 export const Project = mongoose.model('Project', projectSchema);

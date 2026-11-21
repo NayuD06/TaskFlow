@@ -33,7 +33,10 @@ function Float({ children, delay = 0, className = '' }) {
 /** Bảng minh hoạ bên trái: không phải dữ liệu thật, chỉ để giới thiệu sản phẩm. */
 function Showcase() {
   return (
-    <div className="relative hidden overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_0%_0%,#1a47b8_0%,#0d2566_55%,#0a1b4d_100%)] p-10 text-white lg:flex lg:flex-col">
+    <aside
+      aria-label={tr('Giới thiệu TaskFlow')}
+      className="relative hidden overflow-hidden rounded-[28px] bg-[radial-gradient(120%_90%_at_0%_0%,#1a47b8_0%,#0d2566_55%,#0a1b4d_100%)] p-10 text-white lg:flex lg:flex-col"
+    >
       <Link to="/" className="flex w-fit items-center gap-2.5" aria-label={tr('TaskFlow, về trang chủ')}>
         <LogoMark size={36} />
         <LogoWord />
@@ -115,7 +118,7 @@ function Showcase() {
           fill="rgb(47 107 255 / 0.2)"
         />
       </svg>
-    </div>
+    </aside>
   );
 }
 
