@@ -123,7 +123,7 @@ Phím tắt tự tắt khi đang gõ trong ô nhập hoặc đang mở hộp tho
 - **JWT** (HS256) gửi qua header `Authorization: Bearer`, hết hạn sau 7 ngày. Mỗi user có `tokenVersion`: đổi mật khẩu hoặc "đăng xuất mọi thiết bị" làm mọi token cũ mất hiệu lực
 - Mọi truy vấn dự án, công việc, hoạt động, thống kê đều lọc theo người đang đăng nhập (chủ dự án hoặc thành viên được mời). Truy cập dữ liệu người khác trả về 404
 - **Quản trị viên** là tài khoản có `role: admin` hoặc email nằm trong `ADMIN_EMAILS`. Tài khoản bị khoá không đăng nhập và không gọi API được, mọi phiên cũ bị đăng xuất ngay
-- Khoá bí mật Cloudinary (`CLOUDINARY_API_SECRET`) chỉ nằm trên máy chủ. Trình duyệt tải ảnh bằng "upload preset" không ký, máy chủ chỉ nhận link ảnh của đúng tài khoản Cloudinary của bạn. Trang quản trị chỉ xoá được ảnh trong thư mục `taskflow/`
+- Khoá bí mật Cloudinary (trong `CLOUDINARY_URL`) chỉ nằm trên máy chủ. Mỗi lần tải ảnh, máy chủ ký riêng cho người đã đăng nhập (gắn chặt thư mục `taskflow/` và loại file ảnh, tối đa 60 ảnh mỗi 15 phút), và chỉ nhận link ảnh của đúng tài khoản Cloudinary của bạn. Trang quản trị chỉ xoá được ảnh trong thư mục `taskflow/`
 - Liên kết đặt lại mật khẩu chỉ lưu mã băm SHA-256, hết hạn sau 30 phút, dùng được một lần, và trang Quên mật khẩu không cho biết email nào đã đăng ký
 - Log mỗi request chỉ ghi đường dẫn và id người dùng. Sentry (nếu bật) không gửi kèm header đăng nhập, cookie hay nội dung request
 - **Rate limit**: đăng nhập/đăng ký 10 lần sai mỗi 15 phút, đổi mật khẩu/xoá tài khoản 10 lần mỗi 15 phút, toàn API 1000 yêu cầu mỗi 15 phút
@@ -264,8 +264,7 @@ Hạn chót trong dữ liệu mẫu tính theo thời điểm chạy seed, nên 
 | `MAIL_FROM` | `TaskFlow <ban@gmail.com>` | Không bắt buộc. Người gửi email (đã xác minh bên Brevo hoặc Resend) |
 | `BREVO_API_KEY` hoặc `RESEND_API_KEY` | | Không bắt buộc. Khoá API gửi email. Thiếu thì tắt quên mật khẩu qua email và email mời |
 | `GOOGLE_CLIENT_ID` | `123-abc.apps.googleusercontent.com` | Không bắt buộc. Bật nút Đăng nhập bằng Google |
-| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_UPLOAD_PRESET` | `taskflow`, `taskflow_unsigned` | Không bắt buộc. Bật tải ảnh (ảnh đính kèm, ảnh đại diện). Preset phải ở chế độ **Unsigned** |
-| `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | | Không bắt buộc. Cho trang quản trị xem và xoá ảnh. **Không** đưa vào web |
+| `CLOUDINARY_URL` | `cloudinary://KEY:SECRET@CLOUD` | Không bắt buộc. Bật tải ảnh (ảnh đính kèm, ảnh đại diện) và trang quản lý ảnh. Chép ở Cloudinary → Settings → API Keys. **Không** đưa vào web |
 | `ADMIN_EMAILS` | `ban@gmail.com` | Không bắt buộc. Các email luôn là quản trị viên, cách nhau dấu phẩy |
 | `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE` | | Không bắt buộc. Gửi lỗi máy chủ lên Sentry |
 
@@ -366,7 +365,8 @@ Màu hợp lệ: `blue`, `sky`, `cyan`, `teal`, `green`, `amber`, `orange`, `ros
 | GET | `/activity?type=all&limit=30` | Nhật ký hoạt động. `type`: `all`, `completed`, `created`, `team` |
 | GET | `/export?format=json` | Tải dữ liệu của mình (`json` hoặc `csv`, thêm `lang=en` để tiêu đề cột CSV bằng tiếng Anh) |
 | POST | `/import` | Nhập file JSON đã xuất (tối đa 5 MB) |
-| GET | `/config` | Cấu hình công khai: Google Client ID, Cloudinary cloud name và upload preset, có bật email không |
+| GET | `/config` | Cấu hình công khai: Google Client ID, Cloudinary cloud name, có bật email không |
+| POST | `/uploads/sign` | Chữ ký để trình duyệt tải một ảnh thẳng lên Cloudinary: `{ kind: 'tasks' \| 'avatars' }` |
 | GET | `/health` | Kiểm tra server và kết nối DB |
 
 ### Quản trị (chỉ admin)

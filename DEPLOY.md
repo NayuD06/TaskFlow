@@ -437,38 +437,40 @@ Mỗi tính năng dưới đây cần khoá của một dịch vụ bên ngoài 
 
 | Tính năng | Dịch vụ | Biến trên Render |
 | --- | --- | --- |
-| Ảnh đính kèm, ảnh đại diện, trang quản lý ảnh | Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_UPLOAD_PRESET`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
+| Ảnh đính kèm, ảnh đại diện, trang quản lý ảnh | Cloudinary | `CLOUDINARY_URL` |
 | Quên mật khẩu, email mời vào dự án | Brevo (hoặc Resend) | `MAIL_FROM`, `BREVO_API_KEY` (hoặc `RESEND_API_KEY`), `APP_URL` |
 | Đăng nhập bằng Google | Google Cloud | `GOOGLE_CLIENT_ID` |
 | Báo lỗi tự động | Sentry | `SENTRY_DSN` (và `VITE_SENTRY_DSN` trên Vercel) |
 
-> Các khoá này là bí mật (trừ Cloud name, tên preset, Google Client ID và Sentry DSN vốn công khai). Chỉ dán vào Render, **không** đưa lên GitHub, **không** đưa vào Vercel.
+> Các khoá này là bí mật (trừ Google Client ID và Sentry DSN vốn công khai). Chỉ dán vào Render, **không** đưa lên GitHub, **không** đưa vào Vercel.
 
 ### 1. Lưu ảnh: Cloudinary
 
 Ảnh được tải thẳng từ trình duyệt lên Cloudinary (không đi qua Render nên không tốn băng thông server), Atlas chỉ lưu đường link.
 
+Chỉ cần **một biến** `CLOUDINARY_URL`, không phải tạo upload preset: máy chủ tự ký cho từng lần tải ảnh.
+
 1. Đăng ký miễn phí ở https://cloudinary.com (bấm **Sign up for free**, dùng Google hoặc GitHub cho nhanh). Nếu được hỏi dùng để làm gì, chọn gì cũng được.
-2. **Lấy Cloud name**: ở trang **Dashboard** (hoặc **Settings** → **Product environment**) có dòng **Cloud name**, ví dụ `dxyz123ab`. Copy.
-3. **Tạo upload preset không ký**: **Settings** (bánh răng góc dưới bên trái) → **Upload** (hoặc **Upload presets**) → **Add upload preset**:
-   - **Upload preset name**: `taskflow_unsigned` (tên gì cũng được, nhớ tên này).
-   - **Signing mode**: chọn **Unsigned**. Bắt buộc, vì trình duyệt không được biết khoá bí mật.
-   - **Asset folder** để trống: app tự cho ảnh vào thư mục `taskflow/tasks` và `taskflow/avatars`.
-   - Nếu có mục giới hạn định dạng (**Allowed formats**), điền `jpg, jpeg, png, webp, gif` để người lạ không tải loại file khác lên.
-   - **Save**.
-4. **Lấy API Key và API Secret** (cho trang quản trị xem và xoá ảnh): **Settings** → **API Keys**. Copy cột **API Key**, bấm biểu tượng con mắt ở cột **API Secret** để hiện rồi copy. Chưa có dòng nào thì bấm **Generate New API Key**.
-5. Render → **Environment**, thêm 4 biến rồi **Save Changes**:
+2. Vào **Settings** (bánh răng góc dưới bên trái) → **API Keys** (hoặc ở trang **Dashboard** bấm **Go to API Keys**).
+3. Tìm dòng **API environment variable**, bấm nút copy. Bạn được một chuỗi dạng:
+
+   ```
+   CLOUDINARY_URL=cloudinary://123456789012345:AbCdEfGhIjKlMnOpQrStUvWxYz@dxyz123ab
+   ```
+
+   - Nếu chuỗi còn chữ `<your_api_key>` hoặc `<your_api_secret>` thì thay bằng **API Key** và **API Secret** ở bảng ngay bên dưới (bấm con mắt để hiện secret). Bỏ luôn dấu `< >`.
+   - Chưa có dòng API key nào thì bấm **Generate New API Key** trước.
+4. Render → **Environment** → thêm **một** biến rồi **Save Changes**:
 
    | Key | Value |
    | --- | --- |
-   | `CLOUDINARY_CLOUD_NAME` | Cloud name ở bước 2 |
-   | `CLOUDINARY_UPLOAD_PRESET` | `taskflow_unsigned` |
-   | `CLOUDINARY_API_KEY` | API Key |
-   | `CLOUDINARY_API_SECRET` | API Secret (bí mật) |
+   | `CLOUDINARY_URL` | phần sau dấu `=`, ví dụ `cloudinary://123456789012345:AbCdEf...@dxyz123ab` (lỡ dán cả chữ `CLOUDINARY_URL=` cũng được) |
+
+   Chuỗi này chứa API Secret nên là **bí mật**: chỉ dán vào Render, không đưa vào Vercel, không gửi ai.
 
 **Kiểm tra:** mở một công việc trên web thấy mục **Ảnh đính kèm**, kéo một ảnh vào là ảnh hiện lên và có ảnh bìa trên thẻ Kanban. Vào Cloudinary → **Media Library** thấy ảnh nằm trong thư mục `taskflow`. Trang quản trị → **Ảnh Cloudinary** thấy ảnh đó kèm tên công việc đang dùng nó.
 
-- Chỉ cần 2 biến đầu là tải ảnh được. 2 biến sau chỉ cho trang quản trị.
+- Mỗi lần tải ảnh, trình duyệt xin máy chủ một chữ ký (chỉ người đã đăng nhập mới xin được, tối đa 60 ảnh mỗi 15 phút), chữ ký chỉ cho lưu ảnh vào thư mục `taskflow/`.
 - Gói miễn phí có 25 "credits" mỗi tháng (1 credit khoảng 1 GB lưu trữ hoặc 1 GB băng thông). Trang quản trị hiện số đã dùng. Thỉnh thoảng bấm **Dọn dẹp** để xoá ảnh không còn công việc nào dùng.
 - Trang quản trị chỉ đụng tới ảnh trong thư mục `taskflow/`. Ảnh khác trong tài khoản Cloudinary của bạn được để yên.
 
@@ -573,9 +575,9 @@ Khi web hoặc API gặp lỗi, Sentry gửi email cho bạn kèm chỗ lỗi. A
 | Đăng nhập trang admin báo "không có quyền quản trị" | Email không có trong `ADMIN_EMAILS`, gõ sai, hoặc chưa **Save Changes** | Sửa `ADMIN_EMAILS` trên Render cho đúng email tài khoản, đợi Render khởi động lại rồi đăng nhập lại |
 | Vercel project admin build lỗi hoặc trang trắng | Root Directory chưa đặt là `admin` | Project admin → Settings → **Build and Deployment** → Root Directory = `admin`, rồi Redeploy |
 | Đăng nhập web báo "Tài khoản đã bị khoá" | Quản trị viên đã khoá tài khoản này | Vào trang quản trị → **Người dùng** → `...` → **Mở khoá tài khoản** |
-| Không thấy mục Ảnh đính kèm, không đổi được ảnh đại diện bằng ảnh | Thiếu `CLOUDINARY_CLOUD_NAME` hoặc `CLOUDINARY_UPLOAD_PRESET` | Thêm theo phần Cloudinary, rồi tải lại web |
-| Tải ảnh báo lỗi `Upload preset must be whitelisted for unsigned uploads` hoặc `not found` | Preset chưa ở chế độ **Unsigned**, hoặc gõ sai tên preset | Cloudinary → Settings → Upload → sửa preset thành **Unsigned**, kiểm tra lại tên |
-| Trang Ảnh Cloudinary báo "Cloudinary từ chối khoá API" | Sai `CLOUDINARY_API_KEY` hoặc `CLOUDINARY_API_SECRET` | Copy lại ở Cloudinary → Settings → API Keys, chú ý không thừa khoảng trắng |
+| Không thấy mục Ảnh đính kèm, không đổi được ảnh đại diện bằng ảnh | Thiếu hoặc sai dạng `CLOUDINARY_URL` (Logs Render có dòng `CLOUDINARY_URL sai dạng`) | Chép lại theo phần Cloudinary, đúng dạng `cloudinary://KEY:SECRET@CLOUD`, rồi tải lại web |
+| Tải ảnh báo lỗi `Invalid Signature` hoặc `Unknown API key` | API Secret hoặc API Key trong `CLOUDINARY_URL` bị sai, thiếu ký tự, hoặc còn chữ `<your_api_secret>` | Copy lại ở Cloudinary → Settings → API Keys, kiểm tra không thừa khoảng trắng |
+| Trang Ảnh Cloudinary báo "Cloudinary từ chối khoá API" | Sai khoá trong `CLOUDINARY_URL` | Copy lại ở Cloudinary → Settings → API Keys, chú ý không thừa khoảng trắng |
 | Trang Ảnh Cloudinary báo "Đã gọi Cloudinary quá nhiều lần" | Gói miễn phí giới hạn khoảng 500 lần gọi quản trị mỗi giờ | Đợi khoảng 1 giờ. Trang đã tự lưu đệm danh sách 1 phút để đỡ tốn lượt |
 | Trang Quên mật khẩu báo máy chủ chưa bật gửi email | Thiếu `MAIL_FROM` hoặc khoá Brevo/Resend | Thêm theo phần Brevo |
 | Bấm gửi nhưng không nhận được email | Email vào Thư rác, người gửi chưa xác minh, hoặc Brevo chặn IP | Xem cả Thư rác. Logs Render tìm dòng `[mail]` để biết lỗi. Xem lại phần Brevo |
@@ -601,10 +603,10 @@ Mẹo: hầu hết lỗi đều thấy được ở 2 chỗ. **Logs** của serv
 - Báo lỗi đăng nhập chung chung ("Email hoặc mật khẩu không đúng") để người lạ không dò được email nào đã đăng ký.
 - **Chia sẻ dự án**: chỉ chủ dự án và thành viên được mời mới thấy dự án. Chỉ chủ dự án đổi tên, xoá dự án hay quản lý thành viên.
 - **Quản trị viên** chỉ là email trong `ADMIN_EMAILS` hoặc người được admin khác cấp quyền. Tài khoản demo không bao giờ là admin. Khoá một tài khoản thì mọi phiên đăng nhập của họ mất hiệu lực ngay.
-- **Khoá bí mật Cloudinary** chỉ nằm trên Render. Trình duyệt tải ảnh bằng preset không ký, API chỉ nhận link ảnh thuộc đúng tài khoản Cloudinary của bạn.
+- **Khoá bí mật Cloudinary** chỉ nằm trên Render. Mỗi lần tải ảnh máy chủ ký riêng (chỉ cho người đã đăng nhập, chỉ vào thư mục `taskflow/`, chỉ file ảnh), và API chỉ nhận link ảnh thuộc đúng tài khoản Cloudinary của bạn.
 - **Liên kết đặt lại mật khẩu** hết hạn sau 30 phút, chỉ dùng được một lần. Trang Quên mật khẩu luôn báo "đã gửi" để không lộ email nào đã đăng ký.
 
-Việc bạn cần giữ: không đưa `.env`, `JWT_SECRET`, `CLOUDINARY_API_SECRET` hay khoá Brevo lên GitHub, và không chạy lại `npm run seed` khi đã có người dùng thật.
+Việc bạn cần giữ: không đưa `.env`, `JWT_SECRET`, `CLOUDINARY_URL` hay khoá Brevo lên GitHub, và không chạy lại `npm run seed` khi đã có người dùng thật.
 
 ---
 

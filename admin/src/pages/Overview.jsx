@@ -31,13 +31,8 @@ function Stat({ icon: Icon, label, value, note, to }) {
 const INTEGRATIONS = [
   { key: 'mail', label: 'Gửi email', on: 'Quên mật khẩu, lời mời vào dự án', off: 'Đặt MAIL_FROM và BREVO_API_KEY (hoặc RESEND_API_KEY)' },
   { key: 'google', label: 'Đăng nhập Google', on: 'Nút Google đang hiện ở trang đăng nhập', off: 'Đặt GOOGLE_CLIENT_ID' },
-  { key: 'uploads', label: 'Tải ảnh lên Cloudinary', on: 'Ảnh đính kèm và ảnh đại diện', off: 'Đặt CLOUDINARY_CLOUD_NAME và CLOUDINARY_UPLOAD_PRESET' },
-  {
-    key: 'cloudinaryAdmin',
-    label: 'Quản lý ảnh Cloudinary',
-    on: 'Trang Ảnh Cloudinary xem và xoá được ảnh',
-    off: 'Đặt CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET',
-  },
+  { key: 'uploads', label: 'Tải ảnh lên Cloudinary', on: 'Ảnh đính kèm và ảnh đại diện', off: 'Đặt CLOUDINARY_URL' },
+  { key: 'cloudinaryAdmin', label: 'Quản lý ảnh Cloudinary', on: 'Trang Ảnh Cloudinary xem và xoá được ảnh', off: 'Đặt CLOUDINARY_URL' },
   { key: 'sentry', label: 'Báo lỗi Sentry', on: 'Lỗi máy chủ được gửi lên Sentry', off: 'Đặt SENTRY_DSN' },
 ];
 

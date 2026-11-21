@@ -868,4 +868,7 @@ export default {
   'Tài khoản đã bị khoá. Hãy liên hệ quản trị viên.': 'This account has been locked. Please contact the administrator.',
   'Giới thiệu TaskFlow': 'About TaskFlow',
   'Trang quản trị': 'Admin panel',
+  'Máy chủ chưa bật tải ảnh (thiếu CLOUDINARY_URL)': 'Image uploads are not enabled on the server (CLOUDINARY_URL is missing)',
+  'Loại ảnh không hợp lệ': 'Invalid image type',
+  'Bạn tải ảnh quá nhiều trong thời gian ngắn. Hãy đợi khoảng 15 phút.': 'You uploaded too many images in a short time. Please wait about 15 minutes.',
 };

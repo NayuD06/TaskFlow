@@ -10,7 +10,7 @@ import { Project } from '../models/Project.js';
 import { Task } from '../models/Task.js';
 import { User, isAdmin, isEnvAdmin } from '../models/User.js';
 import { deleteUserData } from '../services/accounts.js';
-import { cloudinaryAdminReady, deleteImages, getUsage, isOwnPublicId, listImages, publicIdFromUrl } from '../services/cloudinary.js';
+import { cloudinaryAdminReady, deleteImages, getUsage, isOwnPublicId, listImages, publicIdFromUrl, uploadMode } from '../services/cloudinary.js';
 
 const DAY_MS = 24 * 3600 * 1000;
 
@@ -31,7 +31,7 @@ export function integrations() {
   return {
     mail: !!(env.mail.from && (env.mail.brevoKey || env.mail.resendKey)),
     google: !!env.googleClientId,
-    uploads: !!(env.cloudinary.cloudName && env.cloudinary.uploadPreset),
+    uploads: !!uploadMode(),
     cloudinaryAdmin: cloudinaryAdminReady(),
     sentry: !!env.sentryDsn && !isTest,
     adminEmails: env.adminEmails.length,
@@ -319,7 +319,7 @@ export async function listCloudImages(req, res) {
 // DELETE /api/admin/images  { publicIds: [...], force?: boolean }
 // Ảnh đang dùng chỉ xoá khi force = true: gỡ khỏi thẻ công việc và đặt lại ảnh đại diện trước khi xoá trên Cloudinary.
 export async function deleteCloudImages(req, res) {
-  if (!cloudinaryAdminReady()) throw httpError(503, 'Máy chủ chưa có CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET');
+  if (!cloudinaryAdminReady()) throw httpError(503, 'Máy chủ chưa có CLOUDINARY_URL');
   const raw = req.body?.publicIds;
   if (!Array.isArray(raw) || raw.length === 0) throw invalid({ publicIds: 'Hãy chọn ít nhất một ảnh' });
   if (raw.length > 500) throw invalid({ publicIds: 'Mỗi lần xoá tối đa 500 ảnh' });

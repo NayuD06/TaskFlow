@@ -122,7 +122,7 @@ function ProfileForm({ user, locked }) {
       // Có Cloudinary thì lưu ảnh nét hơn trên đó, không thì lưu ảnh nhỏ thẳng trong tài khoản
       if (uploads) {
         const square = await avatarBlobFromFile(file);
-        const { url } = await uploadImage(square, { ...uploads, folder: 'taskflow/avatars' });
+        const { url } = await uploadImage(square, { ...uploads, kind: 'avatars' });
         setAvatar(url);
       } else {
         setAvatar(await avatarFromFile(file));

@@ -1,7 +1,8 @@
 import '../setup.js';
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
-import { deleteImages, getUsage, isOwnPublicId, listImages, publicIdFromUrl, setCloudinaryFetch } from '../../src/services/cloudinary.js';
+import { parseCloudinaryUrl } from '../../src/lib/cloudinaryUrl.js';
+import { deleteImages, getUsage, isOwnPublicId, listImages, publicIdFromUrl, setCloudinaryFetch, signParams, signedUpload, uploadMode } from '../../src/services/cloudinary.js';
 
 const reply = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 const res = (id, created, bytes = 100) => ({ public_id: id, secure_url: `https://res.cloudinary.com/taskflow-test/image/upload/v1/${id}.jpg`, format: 'jpg', bytes, width: 10, height: 10, created_at: created });
@@ -47,7 +48,7 @@ describe('Cloudinary Admin API', () => {
 
   it('báo lỗi dễ hiểu khi sai khoá hoặc gọi quá nhiều', async () => {
     setCloudinaryFetch(async () => reply(401, { error: { message: 'Invalid api_key' } }));
-    await assert.rejects(listImages({ refresh: true }), (e) => e.status === 502 && /CLOUDINARY_API_KEY/.test(e.message));
+    await assert.rejects(listImages({ refresh: true }), (e) => e.status === 502 && /CLOUDINARY_URL/.test(e.message));
     setCloudinaryFetch(async () => reply(420, {}));
     await assert.rejects(listImages({ refresh: true }), (e) => e.status === 429);
     setCloudinaryFetch(async () => {
@@ -80,5 +81,48 @@ describe('Cloudinary Admin API', () => {
     assert.equal(u.storage.usage, 2048);
     assert.equal(u.credits.usedPercent, 6);
     assert.equal(u.resources, 12);
+  });
+});
+
+describe('CLOUDINARY_URL và tải ảnh có chữ ký', () => {
+  it('đọc được chuỗi chép từ trang API Keys', () => {
+    assert.deepEqual(parseCloudinaryUrl('cloudinary://123456789012345:AbC-dEf_GhI@dxyz123ab'), {
+      cloudName: 'dxyz123ab',
+      apiKey: '123456789012345',
+      apiSecret: 'AbC-dEf_GhI',
+    });
+    // Lỡ dán cả tên biến, dấu nháy hay dấu / cuối vẫn được
+    assert.equal(parseCloudinaryUrl('CLOUDINARY_URL=cloudinary://1:s@demo').cloudName, 'demo');
+    assert.equal(parseCloudinaryUrl(' "cloudinary://1:s@demo/" ').apiSecret, 's');
+  });
+
+  it('báo sai dạng khi còn chữ mẫu hoặc không phải cloudinary://', () => {
+    assert.deepEqual(parseCloudinaryUrl(''), {});
+    assert.deepEqual(parseCloudinaryUrl(undefined), {});
+    assert.equal(parseCloudinaryUrl('cloudinary://<your_api_key>:<your_api_secret>@demo').invalid, true);
+    assert.equal(parseCloudinaryUrl('https://api.cloudinary.com').invalid, true);
+    assert.equal(parseCloudinaryUrl('cloudinary://chi-co-key@demo').invalid, true);
+  });
+
+  it('chỉ có CLOUDINARY_URL là bật tải ảnh có chữ ký', () => {
+    assert.equal(uploadMode(), 'signed');
+  });
+
+  it('chữ ký giống cách Cloudinary tính (ví dụ trong tài liệu Cloudinary)', () => {
+    const params = { timestamp: 1315060510, public_id: 'sample_image', eager: 'w_400,h_300,c_pad|w_260,h_200,c_crop' };
+    assert.equal(signParams(params, 'abcd'), 'bfd09f95f331f558cbd1320e67aa8d488770583e');
+  });
+
+  it('chữ ký gắn chặt thư mục taskflow/<loại> và loại file', () => {
+    const up = signedUpload('avatars');
+    assert.equal(up.cloudName, 'taskflow-test');
+    assert.equal(up.apiKey, 'test-key');
+    assert.equal(up.folder, 'taskflow/avatars');
+    assert.match(up.allowed_formats, /^jpg,/);
+    assert.ok(Math.abs(up.timestamp - Date.now() / 1000) < 5);
+    const { folder, timestamp, allowed_formats: allowed } = up;
+    assert.equal(up.signature, signParams({ folder, timestamp, allowed_formats: allowed }, 'test-secret'));
+    assert.notEqual(up.signature, signParams({ folder: 'khac', timestamp, allowed_formats: allowed }, 'test-secret'));
+    assert.ok(!JSON.stringify(up).includes('test-secret'));
   });
 });

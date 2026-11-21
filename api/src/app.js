@@ -6,12 +6,12 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import { env, isProd, isTest } from './config/env.js';
-import { publicConfig } from './controllers/metaController.js';
+import { publicConfig, signUpload } from './controllers/metaController.js';
 import { importData } from './controllers/portableController.js';
 import { buildOpenApi } from './docs/openapi.js';
 import { requireAdmin, requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundRoute } from './middleware/errorHandler.js';
-import { apiLimiter } from './middleware/rateLimit.js';
+import { apiLimiter, uploadLimiter } from './middleware/rateLimit.js';
 import { adminRouter } from './routes/adminRoutes.js';
 import { authRouter } from './routes/authRoutes.js';
 import { insightRouter, projectRouter, taskRouter } from './routes/taskRoutes.js';
@@ -83,6 +83,7 @@ export function createApp() {
   app.use(express.json({ limit: '100kb' }));
 
   app.get('/api/config', publicConfig);
+  app.post('/api/uploads/sign', requireAuth, uploadLimiter, signUpload);
   app.use('/api/auth', authRouter);
 
   // Mọi route dữ liệu đều cần đăng nhập, và chỉ trả về dữ liệu người đó được xem

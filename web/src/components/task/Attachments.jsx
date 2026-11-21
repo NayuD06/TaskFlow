@@ -122,7 +122,7 @@ export default function Attachments({ task }) {
       try {
         const data = await uploadImage(file, {
           ...uploads,
-          folder: 'taskflow/tasks',
+          kind: 'tasks',
           onProgress: (p) => setQueue((q) => q.map((x) => (x.id === id ? { ...x, progress: p } : x))),
         });
         await add.mutateAsync(data);

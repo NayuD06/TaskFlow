@@ -287,6 +287,14 @@ describe('API với MongoDB', { skip }, () => {
       assert.equal(await Comment.countDocuments({ task: taskId }), 2);
     });
 
+    it('xin chữ ký tải ảnh: chỉ thư mục của TaskFlow', async () => {
+      const res = await api().post('/api/uploads/sign').set(auth(an.token)).send({ kind: 'tasks' }).expect(200);
+      assert.equal(res.body.data.folder, 'taskflow/tasks');
+      assert.equal(res.body.data.cloudName, 'taskflow-test');
+      assert.match(res.body.data.signature, /^[0-9a-f]{40}$/);
+      await api().post('/api/uploads/sign').set(auth(an.token)).send({ kind: '../khac' }).expect(400);
+    });
+
     it('gắn và gỡ ảnh Cloudinary, tối đa 10 ảnh', async () => {
       const url = 'https://res.cloudinary.com/taskflow-test/image/upload/v1/taskflow/a.jpg';
       await api().post(`/api/tasks/${taskId}/attachments`).set(auth(binh.token)).send({ url: 'https://evil.com/a.jpg' }).expect(400);

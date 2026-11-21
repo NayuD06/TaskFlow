@@ -27,9 +27,14 @@ describe('route hệ thống', () => {
     const res = await request(app).get('/api/config').expect(200);
     assert.deepEqual(res.body.data, {
       googleClientId: 'test-client.apps.googleusercontent.com',
-      uploads: { provider: 'cloudinary', cloudName: 'taskflow-test', uploadPreset: 'taskflow_unsigned' },
+      uploads: { provider: 'cloudinary', cloudName: 'taskflow-test', signed: true },
       mail: false,
     });
+    assert.ok(!JSON.stringify(res.body).includes('test-secret'));
+  });
+
+  it('xin chữ ký tải ảnh phải đăng nhập', async () => {
+    await request(app).post('/api/uploads/sign').send({ kind: 'tasks' }).expect(401);
   });
 
   it('CORS chỉ cho phép web của mình', async () => {

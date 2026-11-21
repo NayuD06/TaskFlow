@@ -158,7 +158,23 @@ export function buildOpenApi() {
       '/api/health': { get: op('Hệ thống', 'Kiểm tra máy chủ và kết nối database', { responses: { 200: { description: 'Đang chạy' }, 503: { description: 'Mất kết nối database' } } }) },
       '/api/config': {
         get: op('Hệ thống', 'Cấu hình công khai cho web (Google, tải ảnh, email)', {
-          responses: { 200: ok(s({ googleClientId: nullable(str), uploads: nullable(s({ provider: str, cloudName: str, uploadPreset: str })), mail: bool })) },
+          responses: {
+            200: ok(s({ googleClientId: nullable(str), uploads: nullable(s({ provider: str, cloudName: str, signed: bool, uploadPreset: str })), mail: bool })),
+          },
+        }),
+      },
+      '/api/uploads/sign': {
+        post: op('Bình luận, ảnh, Pomodoro', 'Xin chữ ký để tải một ảnh lên Cloudinary', {
+          ...secured,
+          description:
+            'Máy chủ ký bằng API secret trong CLOUDINARY_URL. Trình duyệt gửi file kèm các trường trả về (api_key, timestamp, folder, allowed_formats, signature) tới https://api.cloudinary.com/v1_1/{cloudName}/image/upload. Tối đa 60 lần mỗi 15 phút.',
+          requestBody: body(s({ kind: { type: 'string', enum: ['tasks', 'avatars'] } })),
+          responses: {
+            200: ok(s({ cloudName: str, apiKey: str, folder: str, timestamp: int, allowed_formats: str, signature: str })),
+            400: E[400],
+            429: err('Tải quá nhiều ảnh'),
+            503: err('Máy chủ chưa có CLOUDINARY_URL'),
+          },
         }),
       },
 
@@ -306,7 +322,7 @@ export function buildOpenApi() {
         parameters: [idParam()],
         post: op('Bình luận, ảnh, Pomodoro', 'Gắn ảnh đã tải lên Cloudinary', {
           ...secured,
-          description: 'Trình duyệt tải ảnh thẳng lên Cloudinary bằng upload preset không ký, rồi gửi kết quả vào đây. Tối đa 10 ảnh mỗi công việc.',
+          description: 'Trình duyệt tải ảnh thẳng lên Cloudinary (dùng chữ ký từ /api/uploads/sign), rồi gửi kết quả vào đây. Tối đa 10 ảnh mỗi công việc.',
           requestBody: body(s({ url: str, publicId: str, name: str, width: int, height: int, bytes: int }, ['url'])),
           responses: { 201: ok(ref('Task')), 400: E[400] },
         }),

@@ -1,5 +1,7 @@
-// Tải ảnh thẳng từ trình duyệt lên Cloudinary bằng "upload preset" không ký (unsigned).
-// Máy chủ TaskFlow không phải nhận file nên nhẹ hơn, và chỉ lưu lại link ảnh.
+// Tải ảnh thẳng từ trình duyệt lên Cloudinary. Máy chủ TaskFlow chỉ ký cho từng lần tải
+// (POST /api/uploads/sign, cần CLOUDINARY_URL trên máy chủ), không phải nhận file nên nhẹ hơn, và chỉ lưu lại link ảnh.
+// Máy chủ cũ dùng "upload preset" không ký thì vẫn tải theo cách đó.
+import { api } from './api.js';
 import { tr } from './i18n.js';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -45,20 +47,29 @@ async function shrink(file, max = 2000) {
  * Tải một ảnh lên. onProgress(0..1) để hiện thanh tiến trình.
  * Trả về { url, publicId, name, width, height, bytes } đúng dạng API TaskFlow cần.
  */
-export async function uploadImage(file, { cloudName, uploadPreset, folder = 'taskflow', onProgress } = {}) {
-  if (!cloudName || !uploadPreset) throw new Error(tr('Máy chủ chưa bật tải ảnh'));
+export async function uploadImage(file, { cloudName, signed, uploadPreset, kind = 'tasks', onProgress } = {}) {
+  if (!cloudName || (!signed && !uploadPreset)) throw new Error(tr('Máy chủ chưa bật tải ảnh'));
   if (!TYPES.test(file.type)) throw new Error(tr('Chỉ nhận ảnh PNG, JPG, WEBP hoặc GIF'));
   if (file.size > MAX_BYTES) throw new Error(tr('Ảnh quá lớn, hãy chọn ảnh dưới 10 MB'));
 
-  const ready = await shrink(file);
+  const [ready, ticket] = await Promise.all([shrink(file), signed ? api.signUpload(kind) : null]);
   const body = new FormData();
   body.append('file', ready);
-  body.append('upload_preset', uploadPreset);
-  body.append('folder', folder);
+  if (ticket) {
+    // Thư mục, thời điểm và loại file nằm trong chữ ký nên phải gửi đúng như máy chủ trả về
+    body.append('api_key', ticket.apiKey);
+    body.append('timestamp', ticket.timestamp);
+    body.append('folder', ticket.folder);
+    body.append('allowed_formats', ticket.allowed_formats);
+    body.append('signature', ticket.signature);
+  } else {
+    body.append('upload_preset', uploadPreset);
+    body.append('folder', `taskflow/${kind}`);
+  }
 
   const result = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`);
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${encodeURIComponent(ticket?.cloudName || cloudName)}/image/upload`);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
     xhr.onload = () => {
       let data = {};

@@ -183,24 +183,17 @@ function Preview({ img, onClose, onDelete }) {
   );
 }
 
-function Setup({ cloudName }) {
+function Setup() {
   const steps = [
     <>
       Đăng nhập <b>cloudinary.com</b>, mở <b>Settings</b> (bánh răng) rồi chọn <b>API Keys</b>.
     </>,
     <>
-      Chép <b>API Key</b> và <b>API Secret</b> (bấm vào con mắt để hiện secret).
+      Bấm nút chép ở dòng <b>API environment variable</b>, được chuỗi dạng <code>cloudinary://API_KEY:API_SECRET@CLOUD_NAME</code>. Nếu chuỗi còn chữ{' '}
+      <code>&lt;your_api_secret&gt;</code> thì thay bằng API Secret thật (bấm con mắt để hiện).
     </>,
     <>
-      Trên Render, mở dịch vụ API, vào <b>Environment</b>, thêm hai biến <code>CLOUDINARY_API_KEY</code> và <code>CLOUDINARY_API_SECRET</code>
-      {cloudName ? (
-        ''
-      ) : (
-        <>
-          , cùng với <code>CLOUDINARY_CLOUD_NAME</code>
-        </>
-      )}
-      , rồi bấm <b>Save Changes</b>.
+      Trên Render, mở dịch vụ API, vào <b>Environment</b>, thêm biến <code>CLOUDINARY_URL</code> với giá trị là chuỗi đó, rồi bấm <b>Save Changes</b>.
     </>,
     <>Đợi Render khởi động lại (khoảng 1 phút) rồi tải lại trang này.</>,
   ];
@@ -211,9 +204,10 @@ function Setup({ cloudName }) {
           <KeyRound className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <h2 className="text-[16px] font-bold">Cần khoá Admin API của Cloudinary</h2>
+          <h2 className="text-[16px] font-bold">Cần nối với Cloudinary</h2>
           <p className="mt-1 text-[13px] text-muted">
-            Để liệt kê và xoá ảnh, máy chủ cần thêm khoá bí mật của Cloudinary. Khoá này chỉ nằm trên Render, không bao giờ gửi xuống trình duyệt.
+            Chỉ cần một biến CLOUDINARY_URL trên máy chủ là bật cả tải ảnh lẫn trang này. Khoá bí mật trong đó chỉ nằm trên Render, không bao giờ gửi xuống
+            trình duyệt.
           </p>
         </div>
       </div>
@@ -351,7 +345,7 @@ export default function Images() {
 
       {list.isPending && <Spinner />}
       {list.isError && <ErrorBox error={list.error} onRetry={list.refetch} />}
-      {first && !first.configured && <Setup cloudName={first.cloudName} />}
+      {first && !first.configured && <Setup />}
 
       {first?.configured && totals && (
         <>

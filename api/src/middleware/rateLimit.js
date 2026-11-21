@@ -35,6 +35,17 @@ export const mailLimiter = rateLimit({
   handler: tooMany('Bạn đã yêu cầu quá nhiều lần. Hãy kiểm tra hộp thư hoặc đợi 15 phút.'),
 });
 
+// Xin chữ ký tải ảnh: mỗi tài khoản tối đa 60 ảnh mỗi 15 phút, đủ dùng mà không bị lạm dụng dung lượng Cloudinary
+export const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  keyGenerator: (req) => `user:${req.user._id}`, // chạy sau requireAuth nên luôn có req.user
+  skip,
+  handler: tooMany('Bạn tải ảnh quá nhiều trong thời gian ngắn. Hãy đợi khoảng 15 phút.'),
+});
+
 // Giới hạn chung cho toàn bộ API để tránh bị spam
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { parseCloudinaryUrl } from '../lib/cloudinaryUrl.js';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
@@ -30,6 +31,12 @@ const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
 
 const clean = (value) => (typeof value === 'string' ? value.trim() : '');
 
+// Cloudinary: chỉ cần một biến CLOUDINARY_URL. Các biến lẻ (nếu có) được ưu tiên hơn.
+const cloudinaryUrl = parseCloudinaryUrl(process.env.CLOUDINARY_URL);
+if (cloudinaryUrl.invalid) {
+  console.warn('[config] CLOUDINARY_URL sai dạng, cần giống: cloudinary://API_KEY:API_SECRET@CLOUD_NAME. Tạm tắt tính năng ảnh.');
+}
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
@@ -46,13 +53,14 @@ export const env = {
     resendKey: clean(process.env.RESEND_API_KEY),
   },
   googleClientId: clean(process.env.GOOGLE_CLIENT_ID),
-  // Ảnh đính kèm tải thẳng từ trình duyệt lên Cloudinary bằng "upload preset" không ký
+  // Ảnh tải thẳng từ trình duyệt lên Cloudinary. Máy chủ ký từng lần tải bằng API secret,
+  // nên không cần tạo "upload preset". Khoá cũng dùng cho trang quản trị xem và xoá ảnh.
   cloudinary: {
-    cloudName: clean(process.env.CLOUDINARY_CLOUD_NAME),
+    cloudName: clean(process.env.CLOUDINARY_CLOUD_NAME) || cloudinaryUrl.cloudName || '',
+    apiKey: clean(process.env.CLOUDINARY_API_KEY) || cloudinaryUrl.apiKey || '',
+    apiSecret: clean(process.env.CLOUDINARY_API_SECRET) || cloudinaryUrl.apiSecret || '',
+    // Cách cũ (không bắt buộc): upload preset không ký, chỉ dùng khi không có API secret
     uploadPreset: clean(process.env.CLOUDINARY_UPLOAD_PRESET),
-    // Khoá Admin API (chỉ máy chủ biết), dùng cho trang quản trị: xem và xoá ảnh đã lưu
-    apiKey: clean(process.env.CLOUDINARY_API_KEY),
-    apiSecret: clean(process.env.CLOUDINARY_API_SECRET),
   },
   // Email luôn là quản trị viên (cách nhanh nhất để có tài khoản admin đầu tiên), cách nhau bằng dấu phẩy
   adminEmails: (process.env.ADMIN_EMAILS || '')

@@ -128,6 +128,7 @@ export const api = {
     pomodoro: (id, minutes) => request(`/tasks/${id}/pomodoros`, { method: 'POST', body: { minutes } }),
   },
   config: () => request('/config'),
+  signUpload: (kind) => request('/uploads/sign', { method: 'POST', body: { kind } }),
   exportData: (format = 'json', lang = 'vi') => download('/export', { format, lang }),
   importData: (data) => request('/import', { method: 'POST', body: data }),
   dashboard: () => request('/dashboard', { query: { tzOffset: tz() } }),

@@ -1,6 +1,8 @@
-// Gọi Cloudinary Admin API từ máy chủ (cần CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET).
+// Làm việc với Cloudinary từ máy chủ (cần CLOUDINARY_URL): ký cho trình duyệt tải ảnh lên,
+// và gọi Admin API cho trang quản trị.
 // Chỉ đụng tới ảnh trong thư mục "taskflow/" (ảnh công việc và ảnh đại diện mà web tải lên),
 // nên nếu tài khoản Cloudinary dùng chung với dự án khác thì ảnh của dự án đó vẫn an toàn.
+import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 
 export const ROOT_FOLDER = 'taskflow';
@@ -19,6 +21,40 @@ export function setCloudinaryFetch(fn) {
 }
 
 export const cloudinaryAdminReady = () => !!(env.cloudinary.cloudName && env.cloudinary.apiKey && env.cloudinary.apiSecret);
+
+/** Cách trình duyệt tải ảnh: 'signed' (máy chủ ký, chỉ cần CLOUDINARY_URL), 'unsigned' (upload preset cũ) hoặc null. */
+export function uploadMode() {
+  if (cloudinaryAdminReady()) return 'signed';
+  if (env.cloudinary.cloudName && env.cloudinary.uploadPreset) return 'unsigned';
+  return null;
+}
+
+export const UPLOAD_KINDS = ['tasks', 'avatars'];
+const ALLOWED_FORMATS = 'jpg,jpeg,png,webp,gif,heic,heif';
+
+/** Chữ ký Cloudinary: tham số xếp theo tên, nối bằng &, thêm API secret rồi băm SHA-1. */
+export function signParams(params, secret = env.cloudinary.apiSecret) {
+  const text = Object.keys(params)
+    .filter((k) => params[k] !== undefined && params[k] !== '')
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join('&');
+  return crypto.createHash('sha1').update(text + secret).digest('hex');
+}
+
+/**
+ * Tham số để trình duyệt tải một ảnh lên thư mục taskflow/<kind>. Chữ ký gắn chặt thư mục và loại file,
+ * nên người dùng không đổi được nơi lưu; Cloudinary chỉ nhận chữ ký trong khoảng 1 giờ.
+ */
+export function signedUpload(kind) {
+  const params = { folder: `${ROOT_FOLDER}/${kind}`, timestamp: Math.floor(Date.now() / 1000), allowed_formats: ALLOWED_FORMATS };
+  return {
+    cloudName: env.cloudinary.cloudName,
+    apiKey: env.cloudinary.apiKey,
+    ...params,
+    signature: signParams(params),
+  };
+}
 
 /** Ảnh có thuộc thư mục của TaskFlow không (chặn xoá nhầm ảnh của dự án khác). */
 export const isOwnPublicId = (publicId) => typeof publicId === 'string' && publicId.startsWith(PREFIX) && !publicId.includes('..');
@@ -61,7 +97,7 @@ async function call(path, { method = 'GET', query } = {}) {
   const data = await res.json().catch(() => ({}));
   if (res.ok) return data;
   if (res.status === 401 || res.status === 403) {
-    throw cloudinaryError(502, 'Cloudinary từ chối khoá API. Hãy kiểm tra CLOUDINARY_API_KEY và CLOUDINARY_API_SECRET trên máy chủ.');
+    throw cloudinaryError(502, 'Cloudinary từ chối khoá API. Hãy kiểm tra lại CLOUDINARY_URL trên máy chủ.');
   }
   if (res.status === 420 || res.status === 429) throw cloudinaryError(429, 'Đã gọi Cloudinary quá nhiều lần trong giờ này, hãy thử lại sau.');
   throw cloudinaryError(502, `Cloudinary báo lỗi: ${data?.error?.message || res.status}`);

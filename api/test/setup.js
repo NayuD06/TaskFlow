@@ -10,9 +10,11 @@ process.env.MAIL_FROM = '';
 process.env.BREVO_API_KEY = '';
 process.env.RESEND_API_KEY = '';
 process.env.GOOGLE_CLIENT_ID = 'test-client.apps.googleusercontent.com';
-process.env.CLOUDINARY_CLOUD_NAME = 'taskflow-test';
-process.env.CLOUDINARY_UPLOAD_PRESET = 'taskflow_unsigned';
-process.env.CLOUDINARY_API_KEY = 'test-key';
-process.env.CLOUDINARY_API_SECRET = 'test-secret';
+// Chỉ một biến như trên Render; các biến lẻ để trống cho chắc không lấy nhầm từ .env
+process.env.CLOUDINARY_URL = 'cloudinary://test-key:test-secret@taskflow-test';
+process.env.CLOUDINARY_CLOUD_NAME = '';
+process.env.CLOUDINARY_UPLOAD_PRESET = '';
+process.env.CLOUDINARY_API_KEY = '';
+process.env.CLOUDINARY_API_SECRET = '';
 process.env.ADMIN_EMAILS = 'boss@example.com, Boss2@Example.com';
 process.env.SENTRY_DSN = '';
