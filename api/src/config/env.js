@@ -23,16 +23,36 @@ if (!jwtSecret) {
   fail('JWT_SECRET quá ngắn hoặc là khoá mặc định. Hãy dùng chuỗi ngẫu nhiên dài ít nhất 32 ký tự.');
 }
 
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const clean = (value) => (typeof value === 'string' ? value.trim() : '');
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
   nodeEnv,
   jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:5173')
-    .split(',')
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean),
+  corsOrigins,
+  // Địa chỉ web, dùng để tạo link trong email (đặt lại mật khẩu, lời mời vào dự án)
+  appUrl: (clean(process.env.APP_URL) || corsOrigins.find((o) => !o.includes('*')) || 'http://localhost:5173').replace(/\/$/, ''),
+  // Gửi email qua API HTTP (Render bản miễn phí chặn cổng SMTP): Brevo hoặc Resend
+  mail: {
+    from: clean(process.env.MAIL_FROM),
+    brevoKey: clean(process.env.BREVO_API_KEY),
+    resendKey: clean(process.env.RESEND_API_KEY),
+  },
+  googleClientId: clean(process.env.GOOGLE_CLIENT_ID),
+  // Ảnh đính kèm tải thẳng từ trình duyệt lên Cloudinary bằng "upload preset" không ký
+  cloudinary: {
+    cloudName: clean(process.env.CLOUDINARY_CLOUD_NAME),
+    uploadPreset: clean(process.env.CLOUDINARY_UPLOAD_PRESET),
+  },
+  sentryDsn: clean(process.env.SENTRY_DSN),
 };
 
 export const isProd = isProduction;
+export const isTest = nodeEnv === 'test';

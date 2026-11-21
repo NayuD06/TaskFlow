@@ -1,5 +1,5 @@
 // Logic thuần (không đụng DB) để dựng truy vấn danh sách task và lọc dữ liệu đầu vào.
-import { MAX_TAG_LENGTH, MAX_TAGS, PRIORITIES, STATUSES } from '../models/Task.js';
+import { MAX_TAG_LENGTH, MAX_TAGS, PRIORITIES, REPEATS, STATUSES } from '../models/Task.js';
 import { dueRange } from '../lib/time.js';
 
 // Việc đã xong luôn "chìm" xuống cuối, trừ chế độ board (sắp theo cột rồi theo thứ tự kéo thả)
@@ -28,13 +28,20 @@ function escapeRegex(text) {
  *  tag:      một nhãn (không phân biệt hoa thường)
  *  search:   tìm theo tên, mô tả hoặc nhãn
  *  sort:     board | newest | oldest | deadline | priority | updated | title
+ * projectIds: các dự án người dùng được xem (của mình và được mời vào)
  */
-export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffset = 0, toId = (v) => v } = {}) {
-  // Luôn giới hạn trong dữ liệu của người đang đăng nhập
+export function buildListPipeline(query = {}, { owner, projectIds, now = new Date(), tzOffset = 0, toId = (v) => v } = {}) {
+  // Luôn giới hạn trong dữ liệu người đang đăng nhập được xem: dự án của mình và dự án được mời vào
   const match = owner ? { owner } : {};
   const { project, status, priority, due, search, sort, tag } = query;
+  const allowed = projectIds ? projectIds.map(String) : null;
 
-  if (project) match.project = toId(project);
+  if (project) {
+    // Hỏi dự án không được phép thì trả về rỗng thay vì lộ dữ liệu
+    match.project = allowed && !allowed.includes(String(project)) ? { $in: [] } : toId(project);
+  } else if (projectIds) {
+    match.project = { $in: projectIds };
+  }
 
   if (status === 'overdue') {
     match.status = { $ne: 'done' };
@@ -85,7 +92,7 @@ export function buildListPipeline(query = {}, { owner, now = new Date(), tzOffse
   ];
 }
 
-const EDITABLE = ['title', 'description', 'status', 'priority', 'deadline', 'project', 'checklist', 'tags'];
+const EDITABLE = ['title', 'description', 'status', 'priority', 'deadline', 'project', 'checklist', 'tags', 'repeat'];
 
 function badRequest(message) {
   const err = new Error(message);
@@ -125,6 +132,10 @@ export function pickTaskFields(body = {}) {
     });
   }
   if ('tags' in data) data.tags = normalizeTags(data.tags);
+  if ('repeat' in data) {
+    if (!REPEATS.includes(data.repeat)) throw badRequest('Kiểu lặp lại không hợp lệ');
+    data.repeatSpawned = false;
+  }
   return data;
 }
 

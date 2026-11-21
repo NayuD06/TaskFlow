@@ -59,15 +59,25 @@ export function validateLogin(body = {}) {
 // Chỉ nhận ảnh raster nhỏ (không nhận SVG vì có thể chứa mã), hoặc emoji trong danh sách có sẵn
 const DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 
-function avatarProblem(value) {
+/** Link ảnh trên Cloudinary của chính app (cloudName đã cấu hình trên server). */
+export function cloudinaryImagePattern(cloudName = '') {
+  const cloud = cloudName ? cloudName.replace(/[^a-zA-Z0-9_-]/g, '') : '[a-zA-Z0-9_-]+';
+  return new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/image/upload/[^\\s"'<>]+$`);
+}
+
+function avatarProblem(value, cloudName) {
   if (typeof value !== 'string') return 'Ảnh đại diện không hợp lệ';
   if (value === '') return null;
   if (value.startsWith('emoji:')) return AVATAR_EMOJIS.includes(value.slice(6)) ? null : 'Ảnh đại diện không hợp lệ';
+  if (value.startsWith('https://')) {
+    return cloudName && value.length <= 500 && cloudinaryImagePattern(cloudName).test(value) ? null : 'Ảnh đại diện không hợp lệ';
+  }
   if (value.length > AVATAR_MAX_LENGTH) return 'Ảnh quá lớn, hãy chọn ảnh khác';
   return DATA_URL.test(value) ? null : 'Ảnh đại diện không hợp lệ';
 }
 
-export function validateProfile(body = {}) {
+/** cloudName: tài khoản Cloudinary của app, để nhận ảnh đại diện đã tải lên đó. */
+export function validateProfile(body = {}, { cloudName = '' } = {}) {
   const data = {};
   const fields = {};
   if (body.name !== undefined) {
@@ -83,7 +93,7 @@ export function validateProfile(body = {}) {
     else data.accentColor = body.accentColor;
   }
   if (body.avatar !== undefined) {
-    const problem = avatarProblem(body.avatar);
+    const problem = avatarProblem(body.avatar, cloudName);
     if (problem) fields.avatar = problem;
     else data.avatar = body.avatar;
   }
@@ -91,13 +101,73 @@ export function validateProfile(body = {}) {
   return data;
 }
 
-export function validatePasswordChange(body = {}) {
+/** requireCurrent = false khi tài khoản chưa có mật khẩu (đăng ký bằng Google) và đang đặt lần đầu. */
+export function validatePasswordChange(body = {}, { requireCurrent = true } = {}) {
   const data = { currentPassword: str(body.currentPassword), newPassword: str(body.newPassword) };
   const fields = {};
-  if (!data.currentPassword) fields.currentPassword = 'Hãy nhập mật khẩu hiện tại';
+  if (requireCurrent && !data.currentPassword) fields.currentPassword = 'Hãy nhập mật khẩu hiện tại';
   const problem = passwordProblem(data.newPassword);
   if (problem) fields.newPassword = problem;
   else if (data.newPassword === data.currentPassword) fields.newPassword = 'Mật khẩu mới phải khác mật khẩu cũ';
   if (Object.keys(fields).length) throw invalid(fields);
   return data;
+}
+
+/** Quên mật khẩu: chỉ cần email hợp lệ. */
+export function validateForgot(body = {}) {
+  const email = normalizeEmail(body.email);
+  const fields = {};
+  checkEmail(email, fields);
+  if (Object.keys(fields).length) throw invalid(fields);
+  return { email };
+}
+
+export function validateReset(body = {}) {
+  const data = { token: str(body.token).trim(), password: str(body.password) };
+  const fields = {};
+  if (!data.token || data.token.length > 200) fields.token = 'Liên kết đặt lại mật khẩu không hợp lệ';
+  const problem = passwordProblem(data.password);
+  if (problem) fields.password = problem;
+  if (Object.keys(fields).length) throw invalid(fields);
+  return data;
+}
+
+export function validateInvite(body = {}) {
+  const email = normalizeEmail(body.email);
+  const fields = {};
+  checkEmail(email, fields);
+  if (Object.keys(fields).length) throw invalid(fields);
+  return { email };
+}
+
+export function validateComment(body = {}) {
+  const text = str(body.text).trim();
+  if (!text) throw invalid({ text: 'Hãy nhập nội dung bình luận' });
+  if (text.length > 1000) throw invalid({ text: 'Bình luận tối đa 1000 ký tự' });
+  return { text };
+}
+
+/**
+ * Ảnh đính kèm: chỉ nhận ảnh nằm trên Cloudinary (đúng tài khoản nếu đã cấu hình),
+ * để không ai chèn được link lạ vào công việc của người khác.
+ */
+export function validateAttachment(body = {}, cloudName = '') {
+  const url = str(body.url).trim();
+  if (!url || url.length > 500 || !cloudinaryImagePattern(cloudName).test(url)) throw invalid({ url: 'Ảnh không hợp lệ' });
+  const num = (v) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.round(Number(v)) : 0);
+  return {
+    url,
+    publicId: str(body.publicId).slice(0, 300),
+    name: str(body.name).trim().slice(0, 120),
+    width: num(body.width),
+    height: num(body.height),
+    bytes: num(body.bytes),
+  };
+}
+
+/** Số phút của một phiên Pomodoro vừa xong (1 đến 120). */
+export function validateMinutes(body = {}) {
+  const minutes = Math.round(Number(body.minutes));
+  if (!Number.isFinite(minutes) || minutes < 1 || minutes > 120) throw invalid({ minutes: 'Số phút không hợp lệ' });
+  return { minutes };
 }

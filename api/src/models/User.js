@@ -21,8 +21,14 @@ const userSchema = new mongoose.Schema(
       maxlength: [254, 'Email quá dài'],
       unique: true,
     },
-    // Chỉ lưu mật khẩu đã băm bằng bcrypt, không bao giờ trả về cho client
-    passwordHash: { type: String, required: true, select: false },
+    // Chỉ lưu mật khẩu đã băm bằng bcrypt, không bao giờ trả về cho client.
+    // Người đăng ký bằng Google chưa có mật khẩu (null) cho tới khi tự đặt.
+    passwordHash: { type: String, default: null, select: false },
+    passwordSet: { type: Boolean, default: true },
+    googleId: { type: String, default: undefined, unique: true, sparse: true, select: false },
+    // Đặt lại mật khẩu qua email: chỉ lưu mã băm SHA-256 của token, hết hạn sau 30 phút
+    resetTokenHash: { type: String, default: null, select: false },
+    resetTokenExpires: { type: Date, default: null, select: false },
     avatarColor: {
       type: String,
       enum: { values: PROJECT_COLORS, message: 'Màu không hợp lệ' },
@@ -49,6 +55,9 @@ const userSchema = new mongoose.Schema(
       transform(_doc, ret) {
         delete ret.passwordHash;
         delete ret.tokenVersion;
+        delete ret.googleId;
+        delete ret.resetTokenHash;
+        delete ret.resetTokenExpires;
         return ret;
       },
     },
@@ -67,6 +76,13 @@ export function publicUser(user) {
     avatar: user.avatar || '',
     accentColor: user.accentColor || 'blue',
     isDemo: !!user.isDemo,
+    hasPassword: user.passwordSet !== false,
     createdAt: user.createdAt,
   };
+}
+
+/** Thông tin rút gọn để hiện người khác trong dự án chung (không có email). */
+export function memberCard(user) {
+  if (!user) return null;
+  return { _id: user._id, name: user.name, avatar: user.avatar || '', avatarColor: user.avatarColor || 'blue' };
 }

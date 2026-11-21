@@ -60,7 +60,7 @@ export function buildSeed(now = Date.now()) {
 
   const tasks = [
     // Đồ án tốt nghiệp
-    { projectKey: 'thesis', title: 'Viết chương 3: Thiết kế hệ thống', tags: ['báo cáo'], description: 'Sơ đồ ERD, use case, sequence cho luồng giao việc.', status: 'doing', priority: 'urgent', deadline: t(1, 17), createdAt: t(-20, 9), checklist: list(['Sơ đồ ERD', true], ['Use case tổng quát', true], ['Sequence: giao việc'], ['Sequence: thông báo']) },
+    { projectKey: 'thesis', title: 'Viết chương 3: Thiết kế hệ thống', tags: ['báo cáo'], pomodoros: 6, focusMinutes: 150, description: 'Sơ đồ ERD, use case, sequence cho luồng giao việc.', status: 'doing', priority: 'urgent', deadline: t(1, 17), createdAt: t(-20, 9), checklist: list(['Sơ đồ ERD', true], ['Use case tổng quát', true], ['Sequence: giao việc'], ['Sequence: thông báo']) },
     { projectKey: 'thesis', title: 'Gửi bản nháp cho thầy hướng dẫn', tags: ['báo cáo'], description: 'Gửi qua email kèm file PDF, hỏi lịch gặp tuần sau.', status: 'todo', priority: 'high', deadline: t(-1, 22), createdAt: t(-10, 14) },
     { projectKey: 'thesis', title: 'Chuẩn bị slide bảo vệ', tags: ['bảo vệ'], description: '15 slide, tập trung vào demo và kết quả.', status: 'todo', priority: 'high', deadline: t(9, 9), createdAt: t(-6, 20), checklist: list(['Dàn ý'], ['Thiết kế template'], ['Chèn video demo']) },
     { projectKey: 'thesis', title: 'Quay video demo 3 phút', tags: ['bảo vệ'], status: 'todo', priority: 'medium', deadline: t(6, 21), createdAt: t(-5, 11) },
@@ -71,7 +71,7 @@ export function buildSeed(now = Date.now()) {
     { projectKey: 'thesis', title: 'Viết chương 1: Tổng quan', status: 'done', priority: 'medium', deadline: t(-12, 17), createdAt: t(-22, 10), completedAt: t(-13, 23) },
 
     // Website TaskFlow
-    { projectKey: 'web', title: 'Thiết kế lại giao diện dashboard', tags: ['frontend'], description: 'Tông đen + xanh dương, có chế độ sáng.', status: 'doing', priority: 'high', deadline: t(0, 20), createdAt: t(-4, 9), checklist: list(['Khung sidebar + header', true], ['Thẻ số liệu', true], ['Biểu đồ hoàn thành'], ['Responsive mobile']) },
+    { projectKey: 'web', title: 'Thiết kế lại giao diện dashboard', tags: ['frontend'], pomodoros: 3, focusMinutes: 75, description: 'Tông đen + xanh dương, có chế độ sáng.', status: 'doing', priority: 'high', deadline: t(0, 20), createdAt: t(-4, 9), checklist: list(['Khung sidebar + header', true], ['Thẻ số liệu', true], ['Biểu đồ hoàn thành'], ['Responsive mobile']) },
     { projectKey: 'web', title: 'Kéo thả task giữa các cột', tags: ['frontend'], description: 'Dùng dnd-kit, hỗ trợ cả bàn phím.', status: 'todo', priority: 'high', deadline: t(2, 17), createdAt: t(-3, 10) },
     { projectKey: 'web', title: 'Fix lỗi CORS trên Render', tags: ['backend', 'bug'], description: 'Preview của Vercel bị chặn, cần thêm wildcard.', status: 'todo', priority: 'urgent', deadline: t(-2, 12), createdAt: t(-5, 16) },
     { projectKey: 'web', title: 'Viết unit test cho API', tags: ['backend'], status: 'todo', priority: 'medium', deadline: t(5, 17), createdAt: t(-7, 10) },
@@ -86,7 +86,7 @@ export function buildSeed(now = Date.now()) {
     // IELTS
     { projectKey: 'english', title: 'Làm đề Reading Cambridge 18 - Test 2', tags: ['reading'], status: 'todo', priority: 'medium', deadline: t(0, 21, 30), createdAt: t(-2, 8) },
     { projectKey: 'english', title: 'Viết Task 2: chủ đề môi trường', tags: ['writing'], description: '250 từ, nhờ bạn chấm theo 4 tiêu chí.', status: 'doing', priority: 'high', deadline: t(1, 22), createdAt: t(-3, 20) },
-    { projectKey: 'english', title: 'Học 30 từ vựng chủ đề Technology', tags: ['từ vựng'], status: 'todo', priority: 'low', deadline: t(4, 21), createdAt: t(-1, 7) },
+    { projectKey: 'english', title: 'Học 30 từ vựng chủ đề Technology', tags: ['từ vựng'], repeat: 'weekdays', status: 'todo', priority: 'low', deadline: t(4, 21), createdAt: t(-1, 7) },
     { projectKey: 'english', title: 'Đăng ký thi thử tại trung tâm', status: 'todo', priority: 'medium', deadline: t(-1, 17), createdAt: t(-8, 12) },
     { projectKey: 'english', title: 'Luyện Speaking Part 2 với bạn', status: 'done', priority: 'medium', createdAt: t(-6, 19), completedAt: t(-2, 21) },
     { projectKey: 'english', title: 'Làm đề Listening Test 1', status: 'done', priority: 'medium', deadline: t(-4, 21), createdAt: t(-9, 19), completedAt: t(-4, 21) },
@@ -101,7 +101,7 @@ export function buildSeed(now = Date.now()) {
     { projectKey: 'life', title: 'Làm lại căn cước công dân', status: 'done', priority: 'high', createdAt: t(-15, 8), completedAt: t(-10, 10) },
 
     // Sức khoẻ
-    { projectKey: 'health', title: 'Chạy 5km công viên Gia Định', tags: ['chạy bộ'], status: 'todo', priority: 'medium', deadline: t(1, 6), createdAt: t(-1, 20) },
+    { projectKey: 'health', title: 'Chạy 5km công viên Gia Định', tags: ['chạy bộ'], repeat: 'weekly', status: 'todo', priority: 'medium', deadline: t(1, 6), createdAt: t(-1, 20) },
     { projectKey: 'health', title: 'Đặt lịch khám sức khoẻ định kỳ', status: 'todo', priority: 'medium', deadline: t(7, 9), createdAt: t(-5, 12) },
     { projectKey: 'health', title: 'Tập gym: lưng và vai', status: 'done', priority: 'low', createdAt: t(-2, 17), completedAt: t(0, 7) },
     { projectKey: 'health', title: 'Ngủ trước 23h cả tuần', status: 'done', priority: 'low', createdAt: t(-8, 22), completedAt: t(-1, 23) },
@@ -124,6 +124,17 @@ export function buildSeed(now = Date.now()) {
 }
 
 /** Sinh lịch sử hoạt động từ các task đã có _id. */
+// Dự án "Website TaskFlow" được chia sẻ cho tài khoản thứ hai, kèm vài bình luận qua lại
+export const SHARED_PROJECT_KEY = 'web';
+export function buildSeedComments(now = Date.now()) {
+  const t = (days, hour, minute) => at(days, hour, minute, now);
+  return [
+    { taskTitle: 'Fix lỗi CORS trên Render', by: 'second', text: 'Mình thử thêm https://taskflow-*.vercel.app vào CORS_ORIGIN là preview chạy được rồi nhé.', createdAt: t(-2, 9, 15) },
+    { taskTitle: 'Fix lỗi CORS trên Render', by: 'demo', text: 'Ok, để mình kiểm tra lại trên bản production rồi đóng task.', createdAt: t(-2, 10, 2) },
+    { taskTitle: 'Thiết kế lại giao diện dashboard', by: 'second', text: 'Chế độ tối nhìn ổn rồi, chỉ còn phần biểu đồ trên điện thoại hơi chật.', createdAt: t(0, 8, 40) },
+  ];
+}
+
 export function buildSeedActivity(tasks, projectsById) {
   const items = [];
   for (const task of tasks) {

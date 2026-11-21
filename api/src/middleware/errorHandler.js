@@ -33,8 +33,12 @@ export function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: { message: 'Body JSON không hợp lệ' } });
   }
 
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: { message: 'Dữ liệu gửi lên quá lớn' } });
+  }
+
   const status = err.status || err.statusCode || 500;
-  if (status >= 500) console.error(err);
+  if (status >= 500) console.error(`[error] ${req.method} ${req.originalUrl.split('?')[0]}`, err);
 
   res.status(status).json({
     error: {
